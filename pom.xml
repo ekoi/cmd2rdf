@@ -47,5 +47,81 @@
 		<artifactId>commons-io</artifactId>
 		<version>2.4</version>
 	</dependency>
+	
+	<!-- joda-time -->
+	<dependency>
+		<groupId>joda-time</groupId>
+		<artifactId>joda-time</artifactId>
+		<version>2.3</version>
+	</dependency>
+	
+	<!-- Java Simple Argument Parser -->
+	<dependency>
+		<groupId>com.martiansoftware</groupId>
+		<artifactId>jsap</artifactId>
+		<version>2.1</version>
+	</dependency>
+	
+	
   </dependencies>
+  <build>
+		<resources>
+			<resource>
+				<filtering>false</filtering>
+				<directory>src/main/resources</directory>
+			</resource>
+			<resource>
+				<filtering>false</filtering>
+				<directory>src/main/java</directory>
+				<includes>
+					<include>**</include>
+				</includes>
+				<excludes>
+					<exclude>**/*.java</exclude>
+				</excludes>
+			</resource>
+		</resources>
+		<testResources>
+			<testResource>
+				<filtering>false</filtering>
+				<directory>src/test/resources</directory>
+			</testResource>
+			<testResource>
+				<filtering>false</filtering>
+				<directory>src/test/java</directory>
+				<includes>
+					<include>**</include>
+				</includes>
+				<excludes>
+					<exclude>**/*.java</exclude>
+				</excludes>
+			</testResource>
+		</testResources>
+		<plugins>
+			<plugin>
+  				<artifactId>maven-assembly-plugin</artifactId>
+  				<executions>
+				    <execution>
+				      <id>make-assembly CMD2RDF</id> <!-- this is used for inheritance merges -->
+				      <phase>package</phase> <!-- bind to the packaging phase -->
+				      <goals>
+				        <goal>single</goal>
+				      </goals>
+				      <configuration>
+					    <archive>
+					      <manifest>
+					        <mainClass>nl.knaw.dans.clarin.ConverterApps</mainClass>
+					      </manifest>
+					    </archive>
+					    <descriptorRefs>
+					      <descriptorRef>jar-with-dependencies</descriptorRef>
+					    </descriptorRefs>
+					    <finalName>Cmd2rdf</finalName>
+					    <appendAssemblyId>false</appendAssemblyId>
+				  	</configuration>
+				  </execution> 
+ 			 	</executions>
+			</plugin>	
+		</plugins>
+	</build>
 </project>

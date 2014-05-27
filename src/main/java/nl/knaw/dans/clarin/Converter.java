@@ -26,44 +26,41 @@ public class Converter {
      * @param resultDir - Directory where you want to put resulting files. 
      */  
 	
-	private static final Logger logger = LoggerFactory.getLogger(Converter.class);
+	private static final Logger log = LoggerFactory.getLogger(Converter.class);
+	private String xsltPath;
+	private String cacheBasePathDir;
 	
-	public Converter(){
+	public Converter(String xsltPath, String cacheBasePathDir){
+		this.xsltPath = xsltPath;
+		this.cacheBasePathDir = cacheBasePathDir;
+		log.debug("xsltPath: " + xsltPath);
+		log.debug("cacheBasePathDir: " + cacheBasePathDir);
 		init();
 	}
-    private void init() {
+	
+//	public Converter(){
+//		init();
+//	}
+    
+	private void init() {
     	 //Set saxon as transformer.  
         System.setProperty("javax.xml.transform.TransformerFactory",  
                            "net.sf.saxon.TransformerFactoryImpl"); 
 		
 	}
-	public void simpleTransform(String sourcePath, String xsltPath,  
-                                       String resultDir) {  
-		logger.debug("sourcePath: " + sourcePath);
-		logger.debug("xsltPath: " + xsltPath);
-		logger.debug("resultDir: " + resultDir);
-//        TransformerFactory tFactory = TransformerFactory.newInstance();  
-//        try {  
-//            Transformer transformer =  
-//                tFactory.newTransformer(new StreamSource(new File(xsltPath)));  
-//  
-//            transformer.transform(new StreamSource(new File(sourcePath)),  
-//                                  new StreamResult(new File(resultDir)));  
-//        } catch (Exception e) {  
-//            e.printStackTrace();  
-//        }  
-		
+	public void simpleTransform(String xmlSourcePath, String rdfFileOutputName, String base) {  
+		log.debug("Converting '" + xmlSourcePath + "' to '" + rdfFileOutputName +"' with base is '" + base + "'" );	
 		Source xsltSource = new StreamSource(xsltPath);
 		TransformerFactory transFact = TransformerFactory.newInstance();
 		Templates cachedXSLT;
 		try {
 			cachedXSLT = transFact.newTemplates(xsltSource);
 			Transformer trans = cachedXSLT.newTransformer();
-			URIResolver resolver = (URIResolver) new ClarinProfileResolver("/tmp");
+			URIResolver resolver = (URIResolver) new ClarinProfileResolver(cacheBasePathDir);
 			trans.setURIResolver(resolver);
-			trans.setParameter("base","http://localhost:8000/DV");
-			trans.transform(new StreamSource(new File(sourcePath)),  
-					 new StreamResult(new File(resultDir)));
+			trans.setParameter("base", base);
+			trans.transform(new StreamSource(new File(xmlSourcePath)),  
+					 new StreamResult(new File(rdfFileOutputName)));
 		} catch (TransformerConfigurationException e1) {
 			e1.printStackTrace();
 		} catch (TransformerException e) {
@@ -71,20 +68,6 @@ public class Converter {
 		} catch (ConverterException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
-
-     
-    }  
-  
-    public static void main(String[] args) {  
-    	logger.trace("args" + args.toString());
-    	Converter c = new Converter();
-    	c.simpleTransform("src/test/data/cmd-xml/oai_beeldengeluid_nl_Expressie_1000278.xml", 
-    			"src/main/resources/xsl/CMDRecord2RDF.xsl", "src/test/data/out/oai_beeldengeluid_nl_Expressie_1000278.rdf");
-  
-//    	c.simpleTransform("src/test/data/data.xml", 
-//    			"src/test/data/eko.xsl", "src/test/data/out/oai_beeldengeluid_nl_Expressie_1000278.rdf");
-//  
-    }  
+		}     
+    }    
 }  

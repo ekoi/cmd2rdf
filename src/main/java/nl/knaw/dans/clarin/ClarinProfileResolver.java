@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.xml.transform.Source;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamSource;
 
@@ -33,7 +34,7 @@ public class ClarinProfileResolver implements URIResolver {
 	}
 
 	  
-	public Source resolve(String href,String base){
+	public Source resolve(String href,String base) throws TransformerException {
 		log.debug("Profile URI: " + href);
 		log.debug("xsl base: " + base);
 		//http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1288172614023/xml
@@ -47,7 +48,7 @@ public class ClarinProfileResolver implements URIResolver {
 	    	return new StreamSource(file);
 	    } else {
 	    	try {
-	    		log.debug("Save " + href + " to file: " + filename);
+	    		log.debug("===Save=== " + href + " to file: " + filename);
 				FileUtils.copyURLToFile(new URL(href),file);
 			} catch (MalformedURLException e) {
 				log.error("Error during caching for " + href + " message: " + e.getMessage());
