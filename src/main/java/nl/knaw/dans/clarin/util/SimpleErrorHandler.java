@@ -10,15 +10,15 @@ public class SimpleErrorHandler implements ErrorHandler {
 	
 	private static final Logger log = LoggerFactory.getLogger(SimpleErrorHandler.class);
 	public void warning(SAXParseException e) throws SAXException {
-		log.warn(e.getMessage());
+		log.warn("WARN: " + e.getMessage());
     }
 
     public void error(SAXParseException e) throws SAXException {
-        log.error(e.getMessage());
+        log.error("ERROR: " + e.getMessage());
     }
 
     public void fatalError(SAXParseException e) throws SAXException {
-    	log.error(e.getMessage());
+    	log.error("FATAL ERROR: " + e.getMessage());
     }
 
 }

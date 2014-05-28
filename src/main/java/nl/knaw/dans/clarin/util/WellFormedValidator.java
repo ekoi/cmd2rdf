@@ -1,11 +1,14 @@
 package nl.knaw.dans.clarin.util;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.commons.io.FileUtils;
 import org.omg.CORBA.SystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +44,12 @@ public class WellFormedValidator {
 	  
 	  public static void main(String args[]) {
 		  try {
-			validate("/Users/akmi/git/cmd2rdf/src/test/data/cmd-rdf/oai_beeldengeluid_nl_Expressie_1000278.rdf");
+			  Iterator<File> iter = FileUtils.iterateFiles(new File(args[0]),new String[] {"rdf"}, true);
+		    	while (iter.hasNext()) {
+		    		File f = iter.next();
+		    		log.debug("Validating " + f.getAbsolutePath());
+		    		validate(f.getAbsolutePath());
+		    	}
 		} catch (SAXException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
