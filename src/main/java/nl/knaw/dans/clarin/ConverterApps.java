@@ -34,8 +34,7 @@ public class ConverterApps {
 			config = checkArgument(args);
 			ok = config.success();
 		} catch (JSAPException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("ERROR: JSAPException, caused by: " + e.getCause());
 		}
     	if (!ok)
     		System.exit(1);
@@ -180,16 +179,6 @@ public class ConverterApps {
             System.err.println(jsap.getHelp());
             System.exit(1);
         }
-//        
-//        String[] names = config.getStringArray("name");
-//        for (int i = 0; i < config.getInt("count"); ++i) {
-//            for (int j = 0; j < names.length; ++j) {
-//                System.out.println((config.getBoolean("verbose") ? "Hello" : "Hi")
-//                                + ", "
-//                                + names[j]
-//                                + "!");
-//            }
-//        }
         return config;
     }
 
