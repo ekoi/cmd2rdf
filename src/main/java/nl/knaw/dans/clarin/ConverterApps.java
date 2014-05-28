@@ -40,20 +40,7 @@ public class ConverterApps {
     	if (!ok)
     		System.exit(1);
     	
-    	
     	DateTime start = new DateTime();
-    	log.trace("args" + args.toString());
-//    	args = new String[]{
-//    			"/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/cmd-xml"//0
-//    			, "/Users/akmi/git/cmd2rdf/src/main/resources/xsl/CMDRecord2RDF.xsl"//1
-//    			, "/Users/akmi/eko99"//2
-//    			, "http://localhost:8081/DAV"//3
-//    			, "/Users/akmi/eko-cmd2rdf-cache"};//4
-//    	String xmlSourcePathDir = args[0];
-//    	String xsltPath = args[1];
-//    	String rdfOutpuDir = args[2];
-//    	String baseURI = args[3];
-//    	String cacheBasePathDir = args[4];
     	
     	String xmlSourcePathDir = config.getString("xmlSourcePathDir");
     	String xsltPath = config.getString("xsltPath");
@@ -105,7 +92,7 @@ public class ConverterApps {
                                 .setShortFlag('i') 
                                 .setLongFlag("inputXml");
 
-        opt1.setHelp("The xmlSourcePathDir.");
+        opt1.setHelp("Path to cmdi xml input directory.");
         jsap.registerParameter(opt1);
         
         FlaggedOption opt2 = new FlaggedOption("xsltPath")
@@ -114,7 +101,7 @@ public class ConverterApps {
 						        .setShortFlag('x') 
 						        .setLongFlag("xsl"); 
 
-		opt2.setHelp("The xsltPath.");
+		opt2.setHelp("Path to the CMDRecord2RDF file.");
 		jsap.registerParameter(opt2);
 		
         FlaggedOption opt3 = new FlaggedOption("rdfOutpuDir")
@@ -123,7 +110,7 @@ public class ConverterApps {
 						        .setShortFlag('o') 
 						        .setLongFlag("rdfOutput"); 
 		
-		opt3.setHelp("The rdfOutpuDir.");
+		opt3.setHelp("The directory pathname for rdf output.");
 		jsap.registerParameter(opt3);
 		
 		FlaggedOption opt4 = new FlaggedOption("baseURI")
@@ -132,7 +119,7 @@ public class ConverterApps {
 						        .setShortFlag('b') 
 						        .setLongFlag("baseURI"); 
 
-		opt4.setHelp("The baseURI.");
+		opt4.setHelp("The base URI.");
 		jsap.registerParameter(opt4);
 		
 		FlaggedOption opt5 = new FlaggedOption("cacheBasePathDir")
@@ -141,7 +128,7 @@ public class ConverterApps {
 								.setShortFlag('c') 
 								.setLongFlag("cache"); 
 		
-		opt5.setHelp("(Optional)The cacheBasePathDir. When this argument is not specified, "
+		opt5.setHelp("(Optional) Path to cache dictionary. When this argument is not specified, "
 				+ "the '/tmp/cmd2rdf-cache' of in windows will be 'C:/tmp/cmd2rdf-cache' will be used.");
 		jsap.registerParameter(opt5);
 		
@@ -152,7 +139,7 @@ public class ConverterApps {
 								.setShortFlag('n') 
 								.setLongFlag("numfile"); 
 
-		opt6.setHelp("(Optional)The number of maximum file to be converted.");
+		opt6.setHelp("(Optional) Max number of xml to be converted.");
 		jsap.registerParameter(opt6);
         
         Switch sw1 = new Switch("verbose")
