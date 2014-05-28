@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author akmi
+ * @author Eko Indarto
  *
  */
 public class ClarinProfileResolver implements URIResolver {
@@ -27,8 +27,14 @@ public class ClarinProfileResolver implements URIResolver {
 	
 	public ClarinProfileResolver(String basePath) throws ConverterException {
 		File dir = new File(basePath);
-		if (!dir.exists())
-			throw new ConverterException("Error");
+		if (!dir.exists()) {
+			boolean success = dir.mkdir();
+			if (!success)
+				throw new ConverterException("ERROR: Cannot create cache directory '" + basePath + "'.");
+			else
+				log.info("Cache directory is created: " + basePath);
+			
+		}
 		this.basePath = basePath;
 		
 	}
@@ -51,9 +57,9 @@ public class ClarinProfileResolver implements URIResolver {
 	    		log.debug("===Save=== " + href + " to file: " + filename);
 				FileUtils.copyURLToFile(new URL(href),file);
 			} catch (MalformedURLException e) {
-				log.error("Error during caching for " + href + " message: " + e.getMessage());
+				log.error("Error during caching for " + href + ", caused by: " + e.getMessage());
 			} catch (IOException e) {
-				log.error("Error during caching for " + href + " message: " + e.getMessage());
+				log.error("Error during caching for " + href + ", caused by: " + e.getMessage());
 			}
 	    }
 	    return null;
