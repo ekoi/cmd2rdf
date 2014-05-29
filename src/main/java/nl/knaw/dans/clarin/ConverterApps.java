@@ -6,6 +6,8 @@ package nl.knaw.dans.clarin;
 import java.io.File;
 import java.util.Iterator;
 
+import nl.knaw.dans.clarin.util.WellFormedValidator;
+
 import org.apache.commons.io.FileUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -25,6 +27,8 @@ import com.martiansoftware.jsap.UnflaggedOption;
  java -jar Cmd2rdf.jar -i /data/cmdi2rdf/resultsets/results/cmdi -x /data/cmdi2rdf/xsl/CMDRecord2RDF.xsl -o /data/cmdi2rdf/eko-rdf-result -c /data/cmdi2rdf/eko-cache -b http://localhost:8000/DAV -n 2
  */
 public class ConverterApps {
+	private static int validRdfOutput;
+	private static int invalidRdfOutput;
 	private static int count;
 	private static final Logger log = LoggerFactory.getLogger(ConverterApps.class);
     public static void main(String[] args) {  
@@ -39,6 +43,7 @@ public class ConverterApps {
     	if (!ok)
     		System.exit(1);
     	
+    	log.debug("### Start Conversion XML --> RDF ####");
     	DateTime start = new DateTime();
     	
     	String xmlSourcePathDir = config.getString("xmlSourcePathDir");
@@ -67,14 +72,22 @@ public class ConverterApps {
     		String relativeFilePath =  f.getAbsolutePath().replace(xmlSourcePathDir, "").replace(".xml", ".rdf");
     		String base = baseURI + relativeFilePath;
     		log.debug("Converting ... [n= " + count + "]" );
-    		c.simpleTransform(f.getAbsolutePath(), rdfOutpuDir + relativeFilePath, base);
-    		count++;
+    		String rdfOutputPath = rdfOutpuDir + relativeFilePath;
+    		c.simpleTransform(f.getAbsolutePath(), rdfOutputPath, base);
+    		boolean validRdf = WellFormedValidator.validate(rdfOutputPath);
+    		if (!validRdf)
+    			invalidRdfOutput++;
+    		else 
+    			validRdfOutput++;
     		
+    		count++;
     	}
     	
     	DateTime end = new DateTime();
     	Period duration = new Period(start, end);
     	log.info("Number of xml files: " + count);
+    	log.info("Number of valid rdf: " + count);
+    	log.info("Number of invalid rdf: " + count);
     	log.info("duration in Hours: " + duration.getHours());
     	log.info("duration in Minutes: " + duration.getMinutes());
     	log.info("duration in Seconds: " + duration.getSeconds());
