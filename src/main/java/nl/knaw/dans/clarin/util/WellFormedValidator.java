@@ -32,48 +32,49 @@ public class WellFormedValidator {
 	   *             Thrown if the input string cannot be read
 	   */
 	
-	  public static void validate(String xml) throws SAXException, IOException, ParserConfigurationException {
+	  public static boolean validate(String xml){
 		  SAXParserFactory factory = SAXParserFactory.newInstance();
 		  factory.setValidating(false);
 		  factory.setNamespaceAware(true);
 
-		  SAXParser parser = factory.newSAXParser();
-
-		  XMLReader reader = parser.getXMLReader();
-		  reader.setErrorHandler(new SimpleErrorHandler());
-		  reader.parse(new InputSource(xml));
+		  SAXParser parser;
+		try {
+			parser = factory.newSAXParser();
+			XMLReader reader = parser.getXMLReader();
+			reader.setErrorHandler(new SimpleErrorHandler());
+			reader.parse(new InputSource(xml));
+			return true;
+		} catch (ParserConfigurationException e) {
+			log.error("Validation ERROR (ParserConfigurationException) of '" + xml + "'. Ccaused by " + e.getCause() );
+		} catch (SAXException e) {
+			log.error("Validation ERROR (SAXException) of '" + xml + "'. Caused by " + e.getMessage() );
+		} catch (IOException e) {
+			log.error("Validation ERROR (IOException) of '" + xml + "'. Caused by " + e.getMessage() );
+		}
+		return false;
 	  }
 	  
 	  public static void main(String args[]) {
-		  log.debug("===BEGIN===");
-		  DateTime start = new DateTime();
-		  int i=0;
-		  String path="";
-		  try {
+			  log.debug("===BEGIN===");
+			  DateTime start = new DateTime();
+			  int i=0;
+			  int x = 0;
+			  String path="";
+			
 			  Iterator<File> iter = FileUtils.iterateFiles(new File(args[0]),new String[] {"rdf"}, true);
-		    	while (iter.hasNext()) {
-		    		i++;
-		    		File f = iter.next();
-		    		path = f.getAbsolutePath();
-		    		//log.debug("Validating " + f.getAbsolutePath());
-		    		validate(path);
-		    	}
-		} catch (SAXException e) {
-			log.debug("Validatig: " + path);
-			log.error("ERROR: SAXException, caused by:" + e.getMessage());
-		} catch (IOException e) {
-			log.debug("Validatig: " + path);
-			log.error("ERROR: IOException, caused by:" + e.getMessage());
-		} catch (ParserConfigurationException e) {
-			log.debug("Validatig: " + path);
-			log.error("ERROR: ParserConfigurationException, caused by:" + e.getMessage());
-		} catch (Exception e) {
-			log.debug("Validatig: " + path);
-			log.error("ERROR: ");
-		}
+	    	while (iter.hasNext()) {
+	    		i++;
+	    		File f = iter.next();
+	    		path = f.getAbsolutePath();
+	    		//log.debug("Validating " + f.getAbsolutePath());
+	    		if (!validate(path))
+	    			x++;
+	    	}	
+		
 		  DateTime end = new DateTime();
 		  Period duration = new Period(start, end);
 	    	log.info("Number of rdf files: " + i);
+	    	log.info("Number of invalid rdf files: " + x);
 	    	log.info("duration in Hours: " + duration.getHours());
 	    	log.info("duration in Minutes: " + duration.getMinutes());
 	    	log.info("duration in Seconds: " + duration.getSeconds());
