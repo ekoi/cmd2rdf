@@ -4,6 +4,7 @@
 package nl.knaw.dans.clarin;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Iterator;
 
 import nl.knaw.dans.clarin.util.WellFormedValidator;
@@ -66,18 +67,22 @@ public class ConverterApps {
     	
     	Converter c = new Converter(xsltPath, cacheBasePathDir);
     	
-    	Iterator<File> iter = FileUtils.iterateFiles(new File(xmlSourcePathDir),new String[] {"xml"}, true);
-    	while (iter.hasNext() && (convertAll || count < maxNumberOfFile) ) {
-    		File f = iter.next();
+    	//Iterator<File> iter = FileUtils.iterateFiles(new File(xmlSourcePathDir),new String[] {"xml"}, true);
+    	//while (iter.hasNext() && (convertAll || count < maxNumberOfFile) ) {
+    	Collection<File> listFiles = FileUtils.listFiles(new File(xmlSourcePathDir),new String[] {"xml"}, true);
+    	log.debug("===== Processing " + listFiles.size() + " xml files.======");
+    	for (File f : listFiles) {
+    		//File f = iter.next();
     		String relativeFilePath =  f.getAbsolutePath().replace(xmlSourcePathDir, "").replace(".xml", ".rdf");
     		String base = baseURI + relativeFilePath;
     		log.debug("Converting ... [n= " + count + "]" );
     		String rdfOutputPath = rdfOutpuDir + relativeFilePath;
     		c.simpleTransform(f.getAbsolutePath(), rdfOutputPath, base);
     		boolean validRdf = WellFormedValidator.validate(rdfOutputPath);
-    		if (!validRdf)
+    		if (!validRdf) {
     			invalidRdfOutput++;
-    		else 
+    			log.info("INVALID RDF: [" + invalidRdfOutput + "] path: "+ rdfOutputPath);
+    		} else 
     			validRdfOutput++;
     		
     		count++;
@@ -86,8 +91,8 @@ public class ConverterApps {
     	DateTime end = new DateTime();
     	Period duration = new Period(start, end);
     	log.info("Number of xml files: " + count);
-    	log.info("Number of valid rdf: " + count);
-    	log.info("Number of invalid rdf: " + count);
+    	log.info("Number of valid rdf: " + validRdfOutput);
+    	log.info("Number of invalid rdf: " + invalidRdfOutput);
     	log.info("duration in Hours: " + duration.getHours());
     	log.info("duration in Minutes: " + duration.getMinutes());
     	log.info("duration in Seconds: " + duration.getSeconds());
