@@ -126,6 +126,30 @@
   				<artifactId>maven-assembly-plugin</artifactId>
   				<executions>
 				    <execution>
+				      <id>make-assembly WellFormedValidator</id> <!-- this is used for inheritance merges -->
+				      <phase>package</phase> <!-- bind to the packaging phase -->
+				      <goals>
+				        <goal>single</goal>
+				      </goals>
+				      <configuration>
+					    <archive>
+					      <manifest>
+					        <mainClass>nl.knaw.dans.clarin.util.WellFormedValidator</mainClass>
+					      </manifest>
+					    </archive>
+					    <descriptorRefs>
+					      <descriptorRef>jar-with-dependencies</descriptorRef>
+					    </descriptorRefs>
+					    <finalName>WellFormedValidator</finalName>
+					    <appendAssemblyId>false</appendAssemblyId>
+				  	</configuration>
+				  </execution> 
+ 			 	</executions>
+			</plugin>	
+			<plugin>
+  				<artifactId>maven-assembly-plugin</artifactId>
+  				<executions>
+				    <execution>
 				      <id>make-assembly Apps</id> <!-- this is used for inheritance merges -->
 				      <phase>package</phase> <!-- bind to the packaging phase -->
 				      <goals>

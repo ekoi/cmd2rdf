@@ -9,6 +9,8 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.io.FileUtils;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
 import org.omg.CORBA.SystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,23 +45,39 @@ public class WellFormedValidator {
 	  }
 	  
 	  public static void main(String args[]) {
+		  log.debug("===BEGIN===");
+		  DateTime start = new DateTime();
+		  int i=0;
+		  String path="";
 		  try {
 			  Iterator<File> iter = FileUtils.iterateFiles(new File(args[0]),new String[] {"rdf"}, true);
 		    	while (iter.hasNext()) {
+		    		i++;
 		    		File f = iter.next();
-		    		log.debug("Validating " + f.getAbsolutePath());
-		    		validate(f.getAbsolutePath());
+		    		path = f.getAbsolutePath();
+		    		//log.debug("Validating " + f.getAbsolutePath());
+		    		validate(path);
 		    	}
 		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.debug("Validatig: " + path);
+			log.error("ERROR: SAXException, caused by:" + e.getMessage());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.debug("Validatig: " + path);
+			log.error("ERROR: IOException, caused by:" + e.getMessage());
 		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.debug("Validatig: " + path);
+			log.error("ERROR: ParserConfigurationException, caused by:" + e.getMessage());
+		} catch (Exception e) {
+			log.debug("Validatig: " + path);
+			log.error("ERROR: ");
 		}
+		  DateTime end = new DateTime();
+		  Period duration = new Period(start, end);
+	    	log.info("Number of rdf files: " + i);
+	    	log.info("duration in Hours: " + duration.getHours());
+	    	log.info("duration in Minutes: " + duration.getMinutes());
+	    	log.info("duration in Seconds: " + duration.getSeconds());
+		  log.debug("===END===");
 	  }
-
+	  
 	}
