@@ -29,8 +29,8 @@ public class Converter {
 	private static final Logger log = LoggerFactory.getLogger(Converter.class);
 	private String xsltPath;
 	private String cacheBasePathDir;
-	private Templates cachedXSLT;
-	private Transformer transformer;
+//	private Templates cachedXSLT;
+//	private Transformer transformer;
 	
 	public Converter(String xsltPath, String cacheBasePathDir){
 		this.xsltPath = xsltPath;
@@ -45,25 +45,16 @@ public class Converter {
     	 //Set saxon as transformer.  
         System.setProperty("javax.xml.transform.TransformerFactory",  
                            "net.sf.saxon.TransformerFactoryImpl"); 
-        Source xsltSource = new StreamSource(xsltPath);
-		TransformerFactory transFact = TransformerFactory.newInstance();
-		try {
-			cachedXSLT = transFact.newTemplates(xsltSource);
-			transformer = cachedXSLT.newTransformer();
-			URIResolver resolver = (URIResolver) new ClarinProfileResolver(cacheBasePathDir);
-			transformer.setURIResolver(resolver);
-		} catch (TransformerConfigurationException e) {
-			log.error("ERROR: TransformerConfigurationException, caused by: " + e.getCause());
-		} catch (ConverterException e) {
-			log.error("ERROR: ConverterException, caused by: " + e.getCause());
-		}
-		
-		
 	}
 	public void simpleTransform(String xmlSourcePath, String rdfFileOutputName, String base) {  
 		log.debug("Converting '" + xmlSourcePath + "' to '" + rdfFileOutputName +"' with base is '" + base + "'" );	
-		
+		Source xsltSource = new StreamSource(xsltPath);
+		TransformerFactory transFact = TransformerFactory.newInstance();
 		try {
+			Templates cachedXSLT = transFact.newTemplates(xsltSource);
+			URIResolver resolver = (URIResolver) new ClarinProfileResolver(cacheBasePathDir);
+			Transformer transformer = cachedXSLT.newTransformer();	
+			transformer.setURIResolver(resolver);
 			transformer.setParameter("base", base);
 			long start = System.currentTimeMillis();
 			transformer.transform(new StreamSource(new File(xmlSourcePath)),  
@@ -74,6 +65,8 @@ public class Converter {
 			log.error("ERROR: TransformerConfigurationException, caused by: " + e.getCause());
 		} catch (TransformerException e) {
 			log.error("ERROR: TransformerException, caused by: " + e.getCause());
+		} catch (ConverterException e) {
+			log.error("ERROR: ConverterException, caused by: " + e.getCause());
 		}    
     }     
 }  
