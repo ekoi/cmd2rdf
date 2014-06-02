@@ -96,6 +96,7 @@ public class ConverterApps {
     	log.info("duration in Hours: " + duration.getHours());
     	log.info("duration in Minutes: " + duration.getMinutes());
     	log.info("duration in Seconds: " + duration.getSeconds());
+    	log.info("duration in Milliseconds: " + duration.getMillis());
     	
     	
     }  
