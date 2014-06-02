@@ -4,6 +4,21 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
 
+import javax.xml.transform.URIResolver;
+import javax.xml.transform.stream.StreamSource;
+
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XsltCompiler;
+import net.sf.saxon.s9api.XsltExecutable;
+import net.sf.saxon.s9api.XsltTransformer;
+import nl.knaw.dans.clarin.ClarinProfileResolver;
+import nl.knaw.dans.clarin.ConverterException;
+
 import org.apache.commons.io.FileUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -52,6 +67,32 @@ public class Apps {
     	log.info("duration in Milliseconds: " + p3);;
     	
     	log.info("Diff (For Loop - Iteration): " + (p3-p1));	
+    	
+    	
+    	Processor proc = new Processor(false);
+        XsltCompiler comp = proc.newXsltCompiler();
+        XsltExecutable exp;
+        Serializer out = new Serializer();
+		try {
+           exp = comp.compile(new StreamSource(new File("/Users/akmi/git/cmd2rdf/src/main/resources/xsl/CMDRecord2RDF.xsl")));
+            XdmNode source = proc.newDocumentBuilder().build(new StreamSource(new File("/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-xml/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus.xml")));
+            URIResolver resolver = (URIResolver) new ClarinProfileResolver("tmp-cache");
+            out.setOutputProperty(Serializer.Property.METHOD, "xml");
+            out.setOutputProperty(Serializer.Property.INDENT, "yes");
+            out.setOutputFile(new File("/Users/akmi/eko99-1/output/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus1.rdf"));
+            XsltTransformer trans = exp.load();
+            trans.setInitialContextNode(source);
+            trans.setParameter(new QName("base"), new XdmAtomicValue("http://localhost:8081/DAV/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus.rdf"));
+            trans.setURIResolver(resolver);
+            trans.setDestination(out);
+            trans.transform();
+		} catch (SaxonApiException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ConverterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	
 	}
 }
