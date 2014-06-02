@@ -2,6 +2,7 @@ package nl.knaw.dans.clarin;
 
 import java.io.File;
 
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
@@ -56,6 +57,7 @@ public class Converter {
 			Transformer transformer = cachedXSLT.newTransformer();	
 			transformer.setURIResolver(resolver);
 			transformer.setParameter("base", base);
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 			long start = System.currentTimeMillis();
 			transformer.transform(new StreamSource(new File(xmlSourcePath)),  
 					 new StreamResult(new File(rdfFileOutputName)));
