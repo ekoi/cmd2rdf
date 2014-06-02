@@ -30,8 +30,6 @@ public class Converter {
 	private static final Logger log = LoggerFactory.getLogger(Converter.class);
 	private String xsltPath;
 	private String cacheBasePathDir;
-//	private Templates cachedXSLT;
-//	private Transformer transformer;
 	
 	public Converter(String xsltPath, String cacheBasePathDir){
 		this.xsltPath = xsltPath;
@@ -49,12 +47,10 @@ public class Converter {
 	}
 	public void simpleTransform(String xmlSourcePath, String rdfFileOutputName, String base) {  
 		log.debug("Converting '" + xmlSourcePath + "' to '" + rdfFileOutputName +"' with base is '" + base + "'" );	
-		Source xsltSource = new StreamSource(xsltPath);
 		TransformerFactory transFact = TransformerFactory.newInstance();
 		try {
-			Templates cachedXSLT = transFact.newTemplates(xsltSource);
 			URIResolver resolver = (URIResolver) new ClarinProfileResolver(cacheBasePathDir);
-			Transformer transformer = cachedXSLT.newTransformer();	
+			Transformer transformer = transFact.newTransformer(new StreamSource(new File(xsltPath)));	
 			transformer.setURIResolver(resolver);
 			transformer.setParameter("base", base);
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
