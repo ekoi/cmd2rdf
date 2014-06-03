@@ -18,9 +18,35 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.11</version>
       <scope>test</scope>
     </dependency>
+    
+    <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>1.9.5</version>
+        <scope>test</scope>
+    </dependency>
+    
+   <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
+      <version>1.5.5</version>
+      <scope>test</scope>
+   </dependency>
+   <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+      <version>1.5.5</version>
+      <scope>test</scope>
+   </dependency>
+
+    <dependency>
+		<groupId>xmlunit</groupId>
+		<artifactId>xmlunit</artifactId>
+		<version>1.5</version>
+	</dependency>
     <!-- Logging -->
     
     <dependency>
@@ -47,6 +73,13 @@
 		<artifactId>commons-io</artifactId>
 		<version>2.4</version>
 	</dependency>
+	
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-collections4</artifactId>
+		<version>4.0</version>
+	</dependency>
+
 	
 	<!-- joda-time -->
 	<dependency>
@@ -150,7 +183,7 @@
   				<artifactId>maven-assembly-plugin</artifactId>
   				<executions>
 				    <execution>
-				      <id>make-assembly Apps</id> <!-- this is used for inheritance merges -->
+				      <id>make-assembly MTCmd2Rdf</id> <!-- this is used for inheritance merges -->
 				      <phase>package</phase> <!-- bind to the packaging phase -->
 				      <goals>
 				        <goal>single</goal>
@@ -158,13 +191,13 @@
 				      <configuration>
 					    <archive>
 					      <manifest>
-					        <mainClass>nl.knaw.dans.clarin.playground.Apps</mainClass>
+					        <mainClass>nl.knaw.dans.clarin.mt.ThreadPool</mainClass>
 					      </manifest>
 					    </archive>
 					    <descriptorRefs>
 					      <descriptorRef>jar-with-dependencies</descriptorRef>
 					    </descriptorRefs>
-					    <finalName>Apps</finalName>
+					    <finalName>MTCmd2Rdf</finalName>
 					    <appendAssemblyId>false</appendAssemblyId>
 				  	</configuration>
 				  </execution> 
