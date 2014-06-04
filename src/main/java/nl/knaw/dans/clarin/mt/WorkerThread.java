@@ -25,7 +25,7 @@ public class WorkerThread implements Runnable {
         this.baseURI = baseURI;
         this.rdfOutpuDir = rdfOutpuDir;
         this.profilesList = profilesList;
-        converter = new Converter(xsltPath, cacheBasePathDir);
+        converter = new Converter(xmlSourcePathDir, xsltPath, cacheBasePathDir);
     }
 
     public void run() {
@@ -38,9 +38,8 @@ public class WorkerThread implements Runnable {
     private void processTransformation() {
 		for (File file: subSets) {
 	    	String relativeFilePath =  file.getAbsolutePath().replace(xmlSourcePathDir, "").replace(".xml", ".rdf");
-			String base = baseURI + relativeFilePath;
 			String rdfOutputPath = rdfOutpuDir + relativeFilePath;
-			converter.simpleTransform(file.getAbsolutePath(), rdfOutputPath, base, profilesList);
+			converter.simpleTransform(file.getAbsolutePath(), rdfOutputPath, baseURI, profilesList);
 			boolean validRdf = WellFormedValidator.validate(rdfOutputPath);
 			if (!validRdf) {
 				log.info("INVALID RDF: "+ rdfOutputPath);
