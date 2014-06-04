@@ -2,9 +2,7 @@ package nl.knaw.dans.clarin.mt;
 
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
-import nl.knaw.dans.clarin.Converter;
 import nl.knaw.dans.clarin.util.WellFormedValidator;
 
 import org.slf4j.Logger;
@@ -18,13 +16,15 @@ public class WorkerThread implements Runnable {
 	private String baseURI;
 	private String rdfOutpuDir;
 	private Converter converter;
+	private List<String> profilesList;
 
     public WorkerThread(List<File> subSets, String xmlSourcePathDir, String baseURI, String rdfOutpuDir
-    					, String xsltPath, String cacheBasePathDir){
+    					, String xsltPath, String cacheBasePathDir, List<String> profilesList){
         this.subSets = subSets;
         this.xmlSourcePathDir = xmlSourcePathDir;
         this.baseURI = baseURI;
         this.rdfOutpuDir = rdfOutpuDir;
+        this.profilesList = profilesList;
         converter = new Converter(xsltPath, cacheBasePathDir);
     }
 
@@ -40,7 +40,7 @@ public class WorkerThread implements Runnable {
 	    	String relativeFilePath =  file.getAbsolutePath().replace(xmlSourcePathDir, "").replace(".xml", ".rdf");
 			String base = baseURI + relativeFilePath;
 			String rdfOutputPath = rdfOutpuDir + relativeFilePath;
-			converter.simpleTransform(file.getAbsolutePath(), rdfOutputPath, base);
+			converter.simpleTransform(file.getAbsolutePath(), rdfOutputPath, base, profilesList);
 			boolean validRdf = WellFormedValidator.validate(rdfOutputPath);
 			if (!validRdf) {
 				log.info("INVALID RDF: "+ rdfOutputPath);

@@ -191,7 +191,7 @@
 				      <configuration>
 					    <archive>
 					      <manifest>
-					        <mainClass>nl.knaw.dans.clarin.mt.ThreadPool</mainClass>
+					        <mainClass>nl.knaw.dans.clarin.mt.ConverterThreadPool</mainClass>
 					      </manifest>
 					    </archive>
 					    <descriptorRefs>

@@ -6,15 +6,12 @@ package nl.knaw.dans.clarin.mt;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import nl.knaw.dans.clarin.Converter;
-import nl.knaw.dans.clarin.ConverterApps;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
@@ -37,10 +34,11 @@ import com.martiansoftware.jsap.UnflaggedOption;
  */
 public class ConverterThreadPool {
 	
+	private static List<String> profilesList = Collections.synchronizedList(new ArrayList<String>());
 	private static int validRdfOutput;
 	private static int invalidRdfOutput;
 	private static int count;
-	private static final Logger log = LoggerFactory.getLogger(ConverterApps.class);
+	private static final Logger log = LoggerFactory.getLogger(ConverterThreadPool.class);
     public static void main(String[] args) {  
     	boolean ok = true;
     	JSAPResult config = null;
@@ -74,13 +72,13 @@ public class ConverterThreadPool {
     	
     	List<File> lf = new ArrayList<File>();
     	lf.addAll(listFiles);
-    	List<List<File>> subSets = ListUtils.partition(lf, 3);
+    	List<List<File>> subSets = ListUtils.partition(lf, 100);
     	log.debug("===== subSets Processing " + subSets.size() + " list of files.======");
-    	 ExecutorService executor = Executors.newFixedThreadPool(3);
+    	 ExecutorService executor = Executors.newFixedThreadPool(100);
     	 for (List<File> files : subSets) {
     		 log.info("@@@ begin of execution, size: " + files.size() );
              Runnable worker = new WorkerThread(files, xmlSourcePathDir, baseURI, 
-            		 					rdfOutpuDir, xsltPath, cacheBasePathDir);
+            		 					rdfOutpuDir, xsltPath, cacheBasePathDir, profilesList);
              executor.execute(worker);
              count=count+files.size();
            }

@@ -1,6 +1,7 @@
 package nl.knaw.dans.clarin.mt;
 
 import java.io.File;
+import java.util.List;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -45,11 +46,11 @@ public class Converter {
         System.setProperty("javax.xml.transform.TransformerFactory",  
                            "net.sf.saxon.TransformerFactoryImpl"); 
 	}
-	public void simpleTransform(String xmlSourcePath, String rdfFileOutputName, String base) {  
+	public void simpleTransform(String xmlSourcePath, String rdfFileOutputName, String base, List<String> profilesList) {  
 		log.debug("Converting '" + xmlSourcePath + "' to '" + rdfFileOutputName +"' with base is '" + base + "'" );	
 		TransformerFactory transFact = TransformerFactory.newInstance();
 		try {
-			URIResolver resolver = (URIResolver) new ClarinProfileResolver(cacheBasePathDir);
+			URIResolver resolver = (URIResolver) new ClarinProfileResolver(cacheBasePathDir, profilesList);
 			Transformer transformer = transFact.newTransformer(new StreamSource(new File(xsltPath)));	
 			transformer.setURIResolver(resolver);
 			transformer.setParameter("base", base);

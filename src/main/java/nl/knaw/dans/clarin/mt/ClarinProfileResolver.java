@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -28,10 +29,11 @@ import org.slf4j.LoggerFactory;
 public class ClarinProfileResolver implements URIResolver {
 	private static final Logger log = LoggerFactory.getLogger(ClarinProfileResolver.class);
 	private String basePath;
-	
-	public ClarinProfileResolver(String basePath) throws ConverterException {
+	private List<String> profilesList;
+	public ClarinProfileResolver(String basePath, List<String> profilesList) throws ConverterException {
 		createCacheTempIfAbsent(basePath);
 		this.basePath = basePath;
+		this.profilesList = profilesList;
 	}
 
 
@@ -56,40 +58,35 @@ public class ClarinProfileResolver implements URIResolver {
 		filename = filename.replace("/xml", ".xml");
 		filename = filename.replace(":", "_");
 		filename = basePath + "/" + filename;
-	    File file = new File(filename);
 	    
-	    if(file.exists()) {
-	    	log.debug("Using profile from the cache: " + href);
-	    	return new StreamSource(file);
-	    } else {
-	    	//wait 1 second to give a chance to other object to create cache file.
-	    	try {
-	    		log.debug("wait 1 second!");
-				Thread.sleep(2000);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-	    	if (!file.exists()) {
-		    	final ReadWriteLock rwl = new ReentrantReadWriteLock();
-	            rwl.writeLock().lock();
-	            rwl.readLock().lock();
-	            try {
-		    		log.debug("===Save=== " + href + " to file: " + filename);
-		    		FileUtils.copyURLToFile(new URL(href),file);
-				} catch (MalformedURLException e) {
-					log.error("Error during caching for " + href + ", caused by: " + e.getMessage());
-				} catch (IOException e) {
-					log.error("Error during caching for " + href + ", caused by: " + e.getMessage());
-				}finally {
-			          rwl.writeLock().unlock(); // Unlock write
-			          rwl.readLock().unlock(); //Unlock read
-		        }
-	    	} else {
-	    		log.debug("===Using profile from the cache: " + href);
-	    	}
-	    }
-	    return new StreamSource(file);
+	    synchronized (profilesList) {
+	    	File file = new File(filename);
+		    if (!profilesList.contains(filename)) {
+		    	profilesList.add(filename);
+		    	if (!file.exists()) {
+			    	profilesList.add(filename);
+			    	final ReadWriteLock rwl = new ReentrantReadWriteLock();
+		            rwl.writeLock().lock();
+		            rwl.readLock().lock();
+		            try {
+			    		log.debug("===Save=== " + href + " to file: " + filename);
+			    		FileUtils.copyURLToFile(new URL(href), file);
+					} catch (MalformedURLException e) {
+						log.error("Error during caching for " + href + ", caused by: " + e.getMessage());
+					} catch (IOException e) {
+						log.error("Error during caching for " + href + ", caused by: " + e.getMessage());
+					}finally {
+				         
+				          rwl.readLock().unlock(); //Unlock read
+				          rwl.writeLock().unlock(); // Unlock write
+			        }
+		    	}
+	            return new StreamSource(file);
+		    } else {
+		    	log.debug("##########Using profile from the cache: " + href);
+		    	return new StreamSource(file);
+		    }
 	  }
+	}
 
 }
