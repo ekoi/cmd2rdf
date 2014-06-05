@@ -5,6 +5,7 @@ import java.util.List;
 
 import nl.knaw.dans.clarin.util.WellFormedValidator;
 
+import org.apache.directmemory.cache.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,15 +17,15 @@ public class WorkerThread implements Runnable {
 	private String baseURI;
 	private String rdfOutpuDir;
 	private Converter converter;
-	private List<String> profilesList;
+	private CacheService<Object, Object> cacheservice;
 
     public WorkerThread(List<File> subSets, String xmlSourcePathDir, String baseURI, String rdfOutpuDir
-    					, String xsltPath, String cacheBasePathDir, List<String> profilesList){
+    					, String xsltPath, String cacheBasePathDir, CacheService<Object, Object> cacheservice){
         this.subSets = subSets;
         this.xmlSourcePathDir = xmlSourcePathDir;
         this.baseURI = baseURI;
         this.rdfOutpuDir = rdfOutpuDir;
-        this.profilesList = profilesList;
+        this.cacheservice = cacheservice;
         converter = new Converter(xmlSourcePathDir, xsltPath, cacheBasePathDir);
     }
 
@@ -39,7 +40,7 @@ public class WorkerThread implements Runnable {
 		for (File file: subSets) {
 	    	String relativeFilePath =  file.getAbsolutePath().replace(xmlSourcePathDir, "").replace(".xml", ".rdf");
 			String rdfOutputPath = rdfOutpuDir + relativeFilePath;
-			converter.simpleTransform(file.getAbsolutePath(), rdfOutputPath, baseURI, profilesList);
+			converter.simpleTransform(file.getAbsolutePath(), rdfOutputPath, baseURI, cacheservice);
 			boolean validRdf = WellFormedValidator.validate(rdfOutputPath);
 			if (!validRdf) {
 				log.info("INVALID RDF: "+ rdfOutputPath);

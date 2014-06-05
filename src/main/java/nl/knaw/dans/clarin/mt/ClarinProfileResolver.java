@@ -3,13 +3,15 @@
  */
 package nl.knaw.dans.clarin.mt;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.nio.charset.StandardCharsets;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
@@ -18,7 +20,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import nl.knaw.dans.clarin.ConverterException;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.directmemory.cache.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,11 +31,11 @@ import org.slf4j.LoggerFactory;
 public class ClarinProfileResolver implements URIResolver {
 	private static final Logger log = LoggerFactory.getLogger(ClarinProfileResolver.class);
 	private String basePath;
-	private List<String> profilesList;
-	public ClarinProfileResolver(String basePath, List<String> profilesList) throws ConverterException {
+	private CacheService<Object, Object> cacheservice;
+	public ClarinProfileResolver(String basePath, CacheService<Object, Object> cacheservice) throws ConverterException {
 		createCacheTempIfAbsent(basePath);
 		this.basePath = basePath;
-		this.profilesList = profilesList;
+		this.cacheservice = cacheservice;
 	}
 
 
@@ -57,36 +59,41 @@ public class ClarinProfileResolver implements URIResolver {
 		String filename = href.replace("http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/", "");//TODO: Don't use hard coded!!!
 		filename = filename.replace("/xml", ".xml");
 		filename = filename.replace(":", "_");
-		filename = basePath + "/" + filename;
+		//filename = basePath + "/" + filename;
 	    
-	    synchronized (profilesList) {
-	    	File file = new File(filename);
-		    if (!profilesList.contains(filename)) {
-		    	profilesList.add(filename);
-		    	if (!file.exists()) {
-			    	profilesList.add(filename);
-			    	final ReadWriteLock rwl = new ReentrantReadWriteLock();
-		            rwl.writeLock().lock();
-		            rwl.readLock().lock();
-		            try {
-			    		log.debug("===Save=== " + href + " to file: " + filename);
-			    		FileUtils.copyURLToFile(new URL(href), file);
-					} catch (MalformedURLException e) {
-						log.error("Error during caching for " + href + ", caused by: " + e.getMessage());
-					} catch (IOException e) {
-						log.error("Error during caching for " + href + ", caused by: " + e.getMessage());
-					}finally {
-				         
-				          rwl.readLock().unlock(); //Unlock read
-				          rwl.writeLock().unlock(); // Unlock write
-			        }
-		    	}
-	            return new StreamSource(file);
+	    synchronized (cacheservice) {
+		    if (cacheservice.retrieveByteArray(filename) == null) {
+		    	log.debug("==========Download from registry");
+		    	URL oracle;
+				try {
+					oracle = new URL(href);
+					BufferedReader in = new BufferedReader(
+					        new InputStreamReader(oracle.openStream()));
+					 String inputLine;
+					 StringBuffer sb = new StringBuffer();
+				        while ((inputLine = in.readLine()) != null)
+				            sb.append(inputLine);
+				        in.close();
+					 byte b[] = sb.toString().getBytes(StandardCharsets.UTF_8);
+					 InputStream is = new ByteArrayInputStream(b);
+					 cacheservice.putByteArray(filename, b);
+					 return new StreamSource(is);
+				} catch (MalformedURLException e) {
+					log.error("ERROR: Caused by MalformedURLException, msg: " + e.getMessage());
+					e.printStackTrace();
+				} catch (IOException e) {
+					log.error("ERROR: Caused by IOException, msg: " + e.getMessage());
+					e.printStackTrace();
+				}
 		    } else {
 		    	log.debug("##########Using profile from the cache: " + href);
-		    	return new StreamSource(file);
+		    	byte b[] = (byte[]) cacheservice.retrieveByteArray(filename);
+		    	InputStream is = new ByteArrayInputStream(b);
+		    	 return new StreamSource(is);
 		    }
 	  }
+	    log.error("ERROR: THIS IS SHOULD NEVER HAPPENED");
+		return null;
 	}
 
 }

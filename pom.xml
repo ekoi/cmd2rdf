@@ -96,6 +96,41 @@
 	</dependency>
 	
 	
+	<!-- Spring Batch -->
+	<dependency>
+ <groupId>org.springframework</groupId>
+ <artifactId>spring-beans</artifactId>
+ <version>4.0.5.RELEASE</version>
+</dependency>
+<dependency>
+ <groupId>org.springframework</groupId>
+ <artifactId>spring-core</artifactId>
+ <version>4.0.5.RELEASE</version>
+</dependency>
+<dependency>
+ <groupId>org.springframework</groupId>
+ <artifactId>spring-context</artifactId>
+ <version>4.0.5.RELEASE</version>
+</dependency>
+<dependency>
+	<groupId>org.springframework.batch</groupId>
+	<artifactId>spring-batch-core</artifactId>
+	<version>3.0.0.RELEASE</version>
+</dependency>
+<dependency>
+	<groupId>org.springframework.batch</groupId>
+	<artifactId>spring-batch-infrastructure</artifactId>
+	<version>3.0.0.RELEASE</version>
+</dependency>
+	
+	<!-- Caching -->
+	
+	<dependency>
+    <groupId>org.apache.directmemory</groupId>
+    <artifactId>directmemory-cache</artifactId>
+    <version>0.2</version>
+  </dependency>
+	
   </dependencies>
   <build>
 		<resources>
@@ -134,7 +169,7 @@
 			<plugin>
   				<artifactId>maven-assembly-plugin</artifactId>
   				<executions>
-				    <execution>
+  					<execution>
 				      <id>make-assembly CMD2RDF</id> <!-- this is used for inheritance merges -->
 				      <phase>package</phase> <!-- bind to the packaging phase -->
 				      <goals>
@@ -153,11 +188,6 @@
 					    <appendAssemblyId>false</appendAssemblyId>
 				  	</configuration>
 				  </execution> 
- 			 	</executions>
-			</plugin>	
-			<plugin>
-  				<artifactId>maven-assembly-plugin</artifactId>
-  				<executions>
 				    <execution>
 				      <id>make-assembly WellFormedValidator</id> <!-- this is used for inheritance merges -->
 				      <phase>package</phase> <!-- bind to the packaging phase -->
@@ -176,12 +206,7 @@
 					    <finalName>WellFormedValidator</finalName>
 					    <appendAssemblyId>false</appendAssemblyId>
 				  	</configuration>
-				  </execution> 
- 			 	</executions>
-			</plugin>	
-			<plugin>
-  				<artifactId>maven-assembly-plugin</artifactId>
-  				<executions>
+				  	</execution>
 				    <execution>
 				      <id>make-assembly MTCmd2Rdf</id> <!-- this is used for inheritance merges -->
 				      <phase>package</phase> <!-- bind to the packaging phase -->
@@ -200,9 +225,11 @@
 					    <finalName>MTCmd2Rdf</finalName>
 					    <appendAssemblyId>false</appendAssemblyId>
 				  	</configuration>
+				  
 				  </execution> 
  			 	</executions>
 			</plugin>	
+
 		</plugins>
 	</build>
 </project>

@@ -4,9 +4,9 @@
 package nl.knaw.dans.clarin.mt;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -15,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.directmemory.DirectMemory;
+import org.apache.directmemory.cache.CacheService;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.slf4j.Logger;
@@ -34,11 +36,18 @@ import com.martiansoftware.jsap.UnflaggedOption;
  */
 public class ConverterThreadPool {
 	
-	private static List<String> profilesList = Collections.synchronizedList(new ArrayList<String>());
+	//private static List<String> profilesList = Collections.synchronizedList(new ArrayList<String>());
 	private static int validRdfOutput;
 	private static int invalidRdfOutput;
 	private static int count;
 	private static final Logger log = LoggerFactory.getLogger(ConverterThreadPool.class);
+	private static final CacheService<Object, Object> cacheService = new DirectMemory<Object, Object>()
+		    .setNumberOfBuffers( 75 )
+		    .setSize( 1000000 )
+		    .setInitialCapacity( 10000 )
+		    .setConcurrencyLevel( 4 )
+		    .newCacheService();
+	
     public static void main(String[] args) {  
     	boolean ok = true;
     	JSAPResult config = null;
@@ -72,13 +81,13 @@ public class ConverterThreadPool {
     	
     	List<File> lf = new ArrayList<File>();
     	lf.addAll(listFiles);
-    	List<List<File>> subSets = ListUtils.partition(lf, 100);
+    	List<List<File>> subSets = ListUtils.partition(lf, 50);
     	log.debug("===== subSets Processing " + subSets.size() + " list of files.======");
-    	 ExecutorService executor = Executors.newFixedThreadPool(100);
+    	 ExecutorService executor = Executors.newFixedThreadPool(50);
     	 for (List<File> files : subSets) {
     		 log.info("@@@ begin of execution, size: " + files.size() );
              Runnable worker = new WorkerThread(files, xmlSourcePathDir, baseURI, 
-            		 					rdfOutpuDir, xsltPath, cacheBasePathDir, profilesList);
+            		 					rdfOutpuDir, xsltPath, cacheBasePathDir, cacheService);
              executor.execute(worker);
              count=count+files.size();
            }
@@ -93,7 +102,13 @@ public class ConverterThreadPool {
 //        	 log.error("####ERROR isTerminated#####");
 //         }
          log.info("Finished all threads");
-    	
+         cacheService.clear();
+         try {
+			cacheService.close();
+		} catch (IOException e) {
+			log.error("ERROR caused by IOException, msg:  " + e.getMessage());
+			e.printStackTrace();
+		}
     	DateTime end = new DateTime();
     	Period duration = new Period(start, end);
     	log.info("Number of xml files: " + count);

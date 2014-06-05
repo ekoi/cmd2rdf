@@ -1,7 +1,6 @@
 package nl.knaw.dans.clarin.mt;
 
 import java.io.File;
-import java.util.List;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -14,6 +13,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import nl.knaw.dans.clarin.ConverterException;
 
+import org.apache.directmemory.cache.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
@@ -39,7 +39,7 @@ public class Converter {
 		this.cacheBasePathDir = cacheBasePathDir;
 		log.debug("xsltPath: " + xsltPath);
 		log.debug("cacheBasePathDir: " + cacheBasePathDir);
-		init();
+		//init();
 	}
 	
     
@@ -48,11 +48,11 @@ public class Converter {
         System.setProperty("javax.xml.transform.TransformerFactory",  
                            "net.sf.saxon.TransformerFactoryImpl"); 
 	}
-	public void simpleTransform(String xmlSourcePath, String rdfFileOutputName, String baseURI, List<String> profilesList) {  
+	public void simpleTransform(String xmlSourcePath, String rdfFileOutputName, String baseURI, CacheService<Object, Object> cacheservice) {  
 		log.debug("Converting '" + xmlSourcePath + "' to '" + rdfFileOutputName +"' with base is '" + baseURI + "'" );	
 		TransformerFactory transFact = TransformerFactory.newInstance();
 		try {
-			URIResolver resolver = (URIResolver) new ClarinProfileResolver(cacheBasePathDir, profilesList);
+			URIResolver resolver = (URIResolver) new ClarinProfileResolver(cacheBasePathDir, cacheservice);
 			Transformer transformer = transFact.newTransformer(new StreamSource(new File(xsltPath)));	
 			transformer.setURIResolver(resolver);
 			transformer.setParameter("base_strip", "file:" + xmlSourcePathDir);
