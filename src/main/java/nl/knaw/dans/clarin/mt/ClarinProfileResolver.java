@@ -5,7 +5,9 @@ package nl.knaw.dans.clarin.mt;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -20,6 +22,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import nl.knaw.dans.clarin.ConverterException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.directmemory.cache.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,29 +65,53 @@ public class ClarinProfileResolver implements URIResolver {
 		//filename = basePath + "/" + filename;
 	    
 	    synchronized (cacheservice) {
+	    	File file = new File(basePath + "/" + filename);
 		    if (cacheservice.retrieveByteArray(filename) == null) {
-		    	log.debug("==========Download from registry");
-		    	URL oracle;
-				try {
-					oracle = new URL(href);
-					BufferedReader in = new BufferedReader(
-					        new InputStreamReader(oracle.openStream()));
-					 String inputLine;
-					 StringBuffer sb = new StringBuffer();
-				        while ((inputLine = in.readLine()) != null)
-				            sb.append(inputLine);
-				        in.close();
-					 byte b[] = sb.toString().getBytes(StandardCharsets.UTF_8);
-					 InputStream is = new ByteArrayInputStream(b);
-					 cacheservice.putByteArray(filename, b);
-					 return new StreamSource(is);
-				} catch (MalformedURLException e) {
-					log.error("ERROR: Caused by MalformedURLException, msg: " + e.getMessage());
-					e.printStackTrace();
-				} catch (IOException e) {
-					log.error("ERROR: Caused by IOException, msg: " + e.getMessage());
-					e.printStackTrace();
-				}
+		    	if (file.exists()) {
+		    		log.debug("-----read cache from file and put in the memory cache");
+		    		
+		            //System.out.println(file.exists() + "!!");
+		            //InputStream in = resource.openStream();
+		            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		            byte[] buf = new byte[1024];
+		            try {
+		            	FileInputStream fis = new FileInputStream(file);
+		                for (int readNum; (readNum = fis.read(buf)) != -1;) {
+		                	//Writes len bytes from the specified byte array starting at offset off to this byte array output stream.  
+		                    bos.write(buf, 0, readNum); //no doubt here is 0
+		                }
+		            } catch (IOException ex) {
+		            	log.error("ERROR: Caused by IOException , msg: " + ex.getMessage());
+		            }
+		            byte[] b = bos.toByteArray();
+		            InputStream is = new ByteArrayInputStream(b);
+					cacheservice.putByteArray(filename, b);
+					return new StreamSource(is); 
+		    	} else {
+			    	log.debug("==========Download from registry");
+			    	URL oracle;
+					try {
+						oracle = new URL(href);
+						BufferedReader in = new BufferedReader(
+						        new InputStreamReader(oracle.openStream()));
+						 String inputLine;
+						 StringBuffer sb = new StringBuffer();
+					        while ((inputLine = in.readLine()) != null)
+					            sb.append(inputLine);
+					        in.close();
+						 byte b[] = sb.toString().getBytes(StandardCharsets.UTF_8);
+						 InputStream is = new ByteArrayInputStream(b);
+						 cacheservice.putByteArray(filename, b);
+						 FileUtils.writeByteArrayToFile(new File(basePath + "/" + filename), b);
+						 return new StreamSource(is);
+					} catch (MalformedURLException e) {
+						log.error("ERROR: Caused by MalformedURLException, msg: " + e.getMessage());
+						e.printStackTrace();
+					} catch (IOException e) {
+						log.error("ERROR: Caused by IOException, msg: " + e.getMessage());
+						e.printStackTrace();
+					}
+		    	}
 		    } else {
 		    	log.debug("##########Using profile from the cache: " + href);
 		    	byte b[] = (byte[]) cacheservice.retrieveByteArray(filename);
