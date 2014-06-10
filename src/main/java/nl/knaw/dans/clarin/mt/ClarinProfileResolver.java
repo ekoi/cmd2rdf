@@ -14,6 +14,8 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
@@ -65,13 +67,12 @@ public class ClarinProfileResolver implements URIResolver {
 		//filename = basePath + "/" + filename;
 	    
 	    synchronized (cacheservice) {
-	    	File file = new File(basePath + "/" + filename);
 		    if (cacheservice.retrieveByteArray(filename) == null) {
+		    	File file = new File(basePath + "/" + filename);
 		    	if (file.exists()) {
-		    		log.debug("-----read cache from file and put in the memory cache");
-		    		
-		            //System.out.println(file.exists() + "!!");
-		            //InputStream in = resource.openStream();
+		    		final ReadWriteLock rwl = new ReentrantReadWriteLock();
+			        rwl.readLock().lock();
+		    		log.debug("-----read cache from file and put in the memory cache: " + filename);
 		            ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		            byte[] buf = new byte[1024];
 		            try {
@@ -83,17 +84,24 @@ public class ClarinProfileResolver implements URIResolver {
 		            } catch (IOException ex) {
 		            	log.error("ERROR: Caused by IOException , msg: " + ex.getMessage());
 		            }
+		            finally {
+				          rwl.readLock().unlock(); //Unlock read
+						}
 		            byte[] b = bos.toByteArray();
 		            InputStream is = new ByteArrayInputStream(b);
 					cacheservice.putByteArray(filename, b);
+					log.debug(">>>> " + cacheservice.entries() + " put to catche service: " + filename);
 					return new StreamSource(is); 
 		    	} else {
-			    	log.debug("==========Download from registry");
-			    	URL oracle;
+			    	log.debug("==========Download from registry: " + filename);
+			    	URL url;
+			    	final ReadWriteLock rwl = new ReentrantReadWriteLock();
 					try {
-						oracle = new URL(href);
+						rwl.writeLock().lock();
+				        rwl.readLock().lock();
+						url = new URL(href);
 						BufferedReader in = new BufferedReader(
-						        new InputStreamReader(oracle.openStream()));
+						        new InputStreamReader(url.openStream()));
 						 String inputLine;
 						 StringBuffer sb = new StringBuffer();
 					        while ((inputLine = in.readLine()) != null)
@@ -102,7 +110,9 @@ public class ClarinProfileResolver implements URIResolver {
 						 byte b[] = sb.toString().getBytes(StandardCharsets.UTF_8);
 						 InputStream is = new ByteArrayInputStream(b);
 						 cacheservice.putByteArray(filename, b);
+						 log.debug(">>>> " + cacheservice.entries() + " put to catche service: " + filename);
 						 FileUtils.writeByteArrayToFile(new File(basePath + "/" + filename), b);
+						 
 						 return new StreamSource(is);
 					} catch (MalformedURLException e) {
 						log.error("ERROR: Caused by MalformedURLException, msg: " + e.getMessage());
@@ -110,6 +120,9 @@ public class ClarinProfileResolver implements URIResolver {
 					} catch (IOException e) {
 						log.error("ERROR: Caused by IOException, msg: " + e.getMessage());
 						e.printStackTrace();
+					}finally {
+			          rwl.writeLock().unlock(); // Unlock write
+			          rwl.readLock().unlock(); //Unlock read
 					}
 		    	}
 		    } else {
@@ -119,7 +132,7 @@ public class ClarinProfileResolver implements URIResolver {
 		    	 return new StreamSource(is);
 		    }
 	  }
-	    log.error("ERROR: THIS IS SHOULD NEVER HAPPENED");
+	    log.error("ERROR: THIS PART SHOULD BE NEVER HAPPENED");
 		return null;
 	}
 

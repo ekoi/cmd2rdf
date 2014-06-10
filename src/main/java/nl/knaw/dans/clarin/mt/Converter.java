@@ -39,18 +39,11 @@ public class Converter {
 		this.cacheBasePathDir = cacheBasePathDir;
 		log.debug("xsltPath: " + xsltPath);
 		log.debug("cacheBasePathDir: " + cacheBasePathDir);
-		//init();
 	}
-	
-    
-	private void init() {
-    	 //Set saxon as transformer.  
-        System.setProperty("javax.xml.transform.TransformerFactory",  
-                           "net.sf.saxon.TransformerFactoryImpl"); 
-	}
+
 	public void simpleTransform(String xmlSourcePath, String rdfFileOutputName, String baseURI, CacheService<Object, Object> cacheservice) {  
 		log.debug("Converting '" + xmlSourcePath + "' to '" + rdfFileOutputName +"' with base is '" + baseURI + "'" );	
-		TransformerFactory transFact = TransformerFactory.newInstance();
+		TransformerFactory transFact = new net.sf.saxon.TransformerFactoryImpl();
 		try {
 			URIResolver resolver = (URIResolver) new ClarinProfileResolver(cacheBasePathDir, cacheservice);
 			Transformer transformer = transFact.newTransformer(new StreamSource(new File(xsltPath)));	
