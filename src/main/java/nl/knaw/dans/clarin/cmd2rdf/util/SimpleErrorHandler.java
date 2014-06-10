@@ -1,4 +1,4 @@
-package nl.knaw.dans.clarin.util;
+package nl.knaw.dans.clarin.cmd2rdf.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

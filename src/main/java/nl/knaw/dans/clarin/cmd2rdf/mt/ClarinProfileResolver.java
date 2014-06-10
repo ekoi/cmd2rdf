@@ -1,7 +1,7 @@
 /**
  * 
  */
-package nl.knaw.dans.clarin.mt;
+package nl.knaw.dans.clarin.cmd2rdf.mt;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -22,7 +22,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamSource;
 
-import nl.knaw.dans.clarin.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.ConverterException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.directmemory.cache.CacheService;

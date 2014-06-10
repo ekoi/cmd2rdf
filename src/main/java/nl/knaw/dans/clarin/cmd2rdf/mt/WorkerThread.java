@@ -1,9 +1,9 @@
-package nl.knaw.dans.clarin.mt;
+package nl.knaw.dans.clarin.cmd2rdf.mt;
 
 import java.io.File;
 import java.util.List;
 
-import nl.knaw.dans.clarin.util.WellFormedValidator;
+import nl.knaw.dans.clarin.cmd2rdf.util.WellFormedValidator;
 
 import org.apache.directmemory.cache.CacheService;
 import org.slf4j.Logger;

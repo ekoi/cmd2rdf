@@ -1,4 +1,4 @@
-package nl.knaw.dans.clarin.mt;
+package nl.knaw.dans.clarin.cmd2rdf.mt;
 
 import java.io.File;
 
@@ -11,7 +11,7 @@ import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import nl.knaw.dans.clarin.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.ConverterException;
 
 import org.apache.directmemory.cache.CacheService;
 import org.slf4j.Logger;

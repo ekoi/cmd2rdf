@@ -1,15 +1,22 @@
 /**
  * 
  */
-package nl.knaw.dans.clarin;
+package nl.knaw.dans.clarin.cmd2rdf.mt;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
-import nl.knaw.dans.clarin.util.WellFormedValidator;
-
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.directmemory.DirectMemory;
+import org.apache.directmemory.cache.CacheService;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.slf4j.Logger;
@@ -22,16 +29,25 @@ import com.martiansoftware.jsap.JSAPResult;
 import com.martiansoftware.jsap.Switch;
 import com.martiansoftware.jsap.UnflaggedOption;
 
+
 /**
  * @author akmi
  *
- java -jar Cmd2rdf.jar -i /data/cmdi2rdf/resultsets/results/cmdi -x /data/cmdi2rdf/xsl/CMDRecord2RDF.xsl -o /data/cmdi2rdf/eko-rdf-result -c /data/cmdi2rdf/eko-cache -b http://localhost:8000/DAV -n 2
  */
-public class ConverterApps {
+public class ConverterThreadPool {
+	
+	//private static List<String> profilesList = Collections.synchronizedList(new ArrayList<String>());
 	private static int validRdfOutput;
 	private static int invalidRdfOutput;
 	private static int count;
-	private static final Logger log = LoggerFactory.getLogger(ConverterApps.class);
+	private static final Logger log = LoggerFactory.getLogger(ConverterThreadPool.class);
+	private static final CacheService<Object, Object> cacheService = new DirectMemory<Object, Object>()
+		    .setNumberOfBuffers( 75 )
+		    .setSize( 1000000 )
+		    .setInitialCapacity( 10000 )
+		    .setConcurrencyLevel( 4 )
+		    .newCacheService();
+	
     public static void main(String[] args) {  
     	boolean ok = true;
     	JSAPResult config = null;
@@ -52,7 +68,6 @@ public class ConverterApps {
     	String rdfOutpuDir = config.getString("rdfOutpuDir");
     	String baseURI = config.getString("baseURI");
     	String cacheBasePathDir = config.getString("cacheBasePathDir");
-    	int maxNumberOfFile = config.getInt("maxNumberOfFile");
     	
     	String OS = System.getProperty("os.name").toLowerCase();
     	if (cacheBasePathDir == null) {
@@ -61,33 +76,39 @@ public class ConverterApps {
     			cacheBasePathDir = "C:/temp/cmd2rdf-cache";
     	}
     	
-    	boolean convertAll = true;
-    	if (maxNumberOfFile > 0)
-    		convertAll = false;
-    	
-    	Converter c = new Converter(xsltPath, cacheBasePathDir);
-    	
-    	//Iterator<File> iter = FileUtils.iterateFiles(new File(xmlSourcePathDir),new String[] {"xml"}, true);
-    	//while (iter.hasNext() && (convertAll || count < maxNumberOfFile) ) {
     	Collection<File> listFiles = FileUtils.listFiles(new File(xmlSourcePathDir),new String[] {"xml"}, true);
     	log.debug("===== Processing " + listFiles.size() + " xml files.======");
-    	for (File f : listFiles) {
-    		//File f = iter.next();
-    		String relativeFilePath =  f.getAbsolutePath().replace(xmlSourcePathDir, "").replace(".xml", ".rdf");
-    		String base = baseURI + relativeFilePath;
-    		log.debug("Converting ... [n= " + count + "]" );
-    		String rdfOutputPath = rdfOutpuDir + relativeFilePath;
-    		c.simpleTransform(f.getAbsolutePath(), rdfOutputPath, base);
-    		boolean validRdf = WellFormedValidator.validate(rdfOutputPath);
-    		if (!validRdf) {
-    			invalidRdfOutput++;
-    			log.info("INVALID RDF: [" + invalidRdfOutput + "] path: "+ rdfOutputPath);
-    		} else 
-    			validRdfOutput++;
-    		
-    		count++;
-    	}
     	
+    	List<File> lf = new ArrayList<File>();
+    	lf.addAll(listFiles);
+    	List<List<File>> subSets = ListUtils.partition(lf, 50);
+    	log.debug("===== subSets Processing " + subSets.size() + " list of files.======");
+    	 ExecutorService executor = Executors.newFixedThreadPool(50);
+    	 for (List<File> files : subSets) {
+    		 log.info("@@@ begin of execution, size: " + files.size() );
+             Runnable worker = new WorkerThread(files, xmlSourcePathDir, baseURI, 
+            		 					rdfOutpuDir, xsltPath, cacheBasePathDir, cacheService);
+             executor.execute(worker);
+             count=count+files.size();
+           }
+         executor.shutdown();
+         try {
+        	 executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        	} catch (InterruptedException e) {
+        	  log.error("ERROR caused by InterruptedException, msg:  " + e.getMessage());
+        	}
+         
+//         while (!executor.isTerminated()) {
+//        	 log.error("####ERROR isTerminated#####");
+//         }
+         log.info("Finished all threads");
+         cacheService.clear();
+         try {
+			cacheService.close();
+		} catch (IOException e) {
+			log.error("ERROR caused by IOException, msg:  " + e.getMessage());
+			e.printStackTrace();
+		}
     	DateTime end = new DateTime();
     	Period duration = new Period(start, end);
     	log.info("Number of xml files: " + count);

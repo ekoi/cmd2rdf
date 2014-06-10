@@ -16,8 +16,8 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
-import nl.knaw.dans.clarin.ClarinProfileResolver;
-import nl.knaw.dans.clarin.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.ClarinProfileResolver;
+import nl.knaw.dans.clarin.cmd2rdf.ConverterException;
 
 import org.apache.commons.io.FileUtils;
 import org.joda.time.DateTime;

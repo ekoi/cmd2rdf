@@ -1,4 +1,4 @@
-package nl.knaw.dans.clarin;
+package nl.knaw.dans.clarin.cmd2rdf;
 
 import java.io.File;
 

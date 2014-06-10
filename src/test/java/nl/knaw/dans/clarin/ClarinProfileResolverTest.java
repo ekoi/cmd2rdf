@@ -7,6 +7,8 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.io.File;
 
+import nl.knaw.dans.clarin.cmd2rdf.ClarinProfileResolver;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
