@@ -22,7 +22,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamSource;
 
-import nl.knaw.dans.clarin.cmd2rdf.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.directmemory.cache.CacheService;
@@ -64,7 +64,6 @@ public class ClarinProfileResolver implements URIResolver {
 		String filename = href.replace("http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/", "");//TODO: Don't use hard coded!!!
 		filename = filename.replace("/xml", ".xml");
 		filename = filename.replace(":", "_");
-		//filename = basePath + "/" + filename;
 	    
 	    synchronized (cacheservice) {
 		    if (cacheservice.retrieveByteArray(filename) == null) {
@@ -73,25 +72,17 @@ public class ClarinProfileResolver implements URIResolver {
 		    		final ReadWriteLock rwl = new ReentrantReadWriteLock();
 			        rwl.readLock().lock();
 		    		log.debug("-----read cache from file and put in the memory cache: " + filename);
-		            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		            byte[] buf = new byte[1024];
-		            try {
-		            	FileInputStream fis = new FileInputStream(file);
-		                for (int readNum; (readNum = fis.read(buf)) != -1;) {
-		                	//Writes len bytes from the specified byte array starting at offset off to this byte array output stream.  
-		                    bos.write(buf, 0, readNum); //no doubt here is 0
-		                }
-		            } catch (IOException ex) {
-		            	log.error("ERROR: Caused by IOException , msg: " + ex.getMessage());
-		            }
-		            finally {
+		    		
+					try {
+						byte[] bytes = FileUtils.readFileToByteArray(file);
+						cacheservice.putByteArray(filename, bytes);
+						InputStream is = new ByteArrayInputStream(bytes);
+						return new StreamSource(is); 
+					} catch (IOException e) {
+						log.error("FATAL ERROR: could not put the profile to the cache. Caused by IOException, msg: " + e.getMessage());
+					}  finally {
 				          rwl.readLock().unlock(); //Unlock read
-						}
-		            byte[] b = bos.toByteArray();
-		            InputStream is = new ByteArrayInputStream(b);
-					cacheservice.putByteArray(filename, b);
-					log.debug(">>>> " + cacheservice.entries() + " put to catche service: " + filename);
-					return new StreamSource(is); 
+					}
 		    	} else {
 			    	log.debug("==========Download from registry: " + filename);
 			    	URL url;
@@ -132,7 +123,7 @@ public class ClarinProfileResolver implements URIResolver {
 		    	 return new StreamSource(is);
 		    }
 	  }
-	    log.error("ERROR: THIS PART SHOULD BE NEVER HAPPENED");
+	    log.error("ERROR: THIS PART SHOULD BE NEVER REACHED");
 		return null;
 	}
 

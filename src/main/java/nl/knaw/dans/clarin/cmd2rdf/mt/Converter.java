@@ -11,7 +11,7 @@ import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import nl.knaw.dans.clarin.cmd2rdf.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
 
 import org.apache.directmemory.cache.CacheService;
 import org.slf4j.Logger;

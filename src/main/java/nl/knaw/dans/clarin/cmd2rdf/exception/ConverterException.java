@@ -1,7 +1,7 @@
 /**
  * 
  */
-package nl.knaw.dans.clarin.cmd2rdf;
+package nl.knaw.dans.clarin.cmd2rdf.exception;
 
 /**
  * @author akmi
