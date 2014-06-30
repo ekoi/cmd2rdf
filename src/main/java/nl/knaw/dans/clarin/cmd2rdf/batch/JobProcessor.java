@@ -1,46 +1,73 @@
 package nl.knaw.dans.clarin.cmd2rdf.batch;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
-import java.util.regex.MatchResult;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import nl.knaw.dans.clarin.cmd2rdf.mt.ThreadPoolConverter;
 import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
 import org.easybatch.core.api.AbstractRecordProcessor;
 public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
-
+	private final Pattern pattern = Pattern.compile("\\$(.*?)\\$");
+	private static final Map<String, String> GLOBAL_VARS = new HashMap<String, String>();
 	
 
 	public void processRecord(Jobs job)
 			throws Exception {
-		Config c = job.getConfig();
-		System.out.println("config version: " + c.version);
-		System.out.println("eko: " + c.virtuosoUrl);
+		setupGlolbalConfiguration(job);
+		
 		Record r = job.getRecord();
 		List<Action> list = r.actions;
 		for (Action act : list) {
-			System.out.println(act.name);
-			if (act.name.equals("transform")) {
-				List<Argument> args = act.clazz.arguments;
-				for (Argument arg : args) {
-					System.out.println(">>>> " + arg.name + "\t ---" );
-					List<Param> ps = arg.params;
-					for (Param p : Misc.emptyIfNull(ps)) {
-						System.out.println("==== " + p.name + "\t" + p.value);
-						String value = p.value;
-						Pattern pattern = Pattern.compile("\\$(.*?)\\$");
-						Matcher m = pattern.matcher(value);
-						if (m.find()) {
-							String globalVar = m.group(1);
-							System.out.println("globalVar: " + globalVar);
-						}
+			//if (act.name.equals("java")) {
+			System.out.println(act.clazz.name);
+			Class<?> clazz = Class.forName(act.clazz.name);
+			Object clazzObj = clazz.newInstance();
+			List<Arg> args = act.clazz.arguments;
+			for (Arg arg : Misc.emptyIfNull(args)) {
+				String pName = arg.name;
+				System.out.println(pName);
+				String pVal = arg.value;
+				Matcher m = pattern.matcher(pVal);
+				if (m.find()) {
+					String globalVar = m.group(1);
+					if (GLOBAL_VARS.containsKey(globalVar)) {
+						pVal = pVal.replace(m.group(0), GLOBAL_VARS.get(globalVar));
 					}
 				}
-			}
+				Field f = clazz.getDeclaredField(pName);
+				System.out.println(f.getName());
+				f.setAccessible(true);
+				f.set(clazzObj, pVal);
+				System.out.println(f.get(clazzObj));
+				
+		    }
+			System.out.println(act.clazz.methodToExecute);
+			Method method = clazz.getDeclaredMethod(act.clazz.methodToExecute);
+			method.invoke(clazzObj);
 		}
-		//ThreadPoolConverter tpc = new ThreadPoolConverter(xmlSourcePathDir, xsltPath, rdfOutputDir, baseURI, cacheBasePathDir, numberOfThreads)
+	}
+
+
+	private void setupGlolbalConfiguration(Jobs job)
+			throws IntrospectionException, IllegalAccessException,
+			InvocationTargetException {
+		Config c = job.getConfig();
+		BeanInfo beanInfo = Introspector.getBeanInfo(Config.class);
+		for (PropertyDescriptor propertyDesc : beanInfo.getPropertyDescriptors()) {
+		    String propertyName = propertyDesc.getName();
+		    Object value = propertyDesc.getReadMethod().invoke(c);
+		    GLOBAL_VARS.put(propertyName, String.valueOf(value));
+		}
 	}
 	
 	

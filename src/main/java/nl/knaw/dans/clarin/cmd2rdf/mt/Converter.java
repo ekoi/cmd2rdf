@@ -1,8 +1,11 @@
 package nl.knaw.dans.clarin.cmd2rdf.mt;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
+import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -30,38 +33,50 @@ public class Converter {
 	
 	private static final Logger log = LoggerFactory.getLogger(Converter.class);
 	private  String xmlSourcePathDir;
-	private String xsltPath;
 	private String cacheBasePathDir;
+	private Templates cachedXSLT;
+	
 	
 	public Converter( String xmlSourcePathDir, String xsltPath, String cacheBasePathDir){
 		this.xmlSourcePathDir = xmlSourcePathDir;
-		this.xsltPath = xsltPath;
 		this.cacheBasePathDir = cacheBasePathDir;
 		log.debug("xsltPath: " + xsltPath);
 		log.debug("cacheBasePathDir: " + cacheBasePathDir);
+		TransformerFactory transFact = new net.sf.saxon.TransformerFactoryImpl();
+		Source xsltSource = new StreamSource(xsltPath);
+		try {
+			this.cachedXSLT = transFact.newTemplates(xsltSource);
+		} catch (TransformerConfigurationException e) {
+			log.error("ERROR: TransformerConfigurationException, caused by: " + e.getMessage());
+		}
+		
 	}
 
-	public void simpleTransform(String xmlSourcePath, String rdfFileOutputName, String baseURI, CacheService<Object, Object> cacheservice) {  
-		log.debug("Converting '" + xmlSourcePath + "' to '" + rdfFileOutputName +"' with base is '" + baseURI + "'" );	
-		TransformerFactory transFact = new net.sf.saxon.TransformerFactoryImpl();
+	public ByteArrayOutputStream simpleTransform(String xmlSourcePath, String rdfFileOutputName, String baseURI, String registry,CacheService<Object, Object> cacheservice) {  
+		ByteArrayOutputStream bos=null;
 		try {
-			URIResolver resolver = (URIResolver) new ClarinProfileResolver(cacheBasePathDir, cacheservice);
-			Transformer transformer = transFact.newTransformer(new StreamSource(new File(xsltPath)));	
+			log.debug("Converting '" + xmlSourcePath + "' to '" + rdfFileOutputName +"' with base is '" + baseURI + "'" );
+			URIResolver resolver = (URIResolver) new ClarinProfileResolver(cacheBasePathDir, registry, cacheservice);
+			Transformer transformer = cachedXSLT.newTransformer();	
 			transformer.setURIResolver(resolver);
 			transformer.setParameter("base_strip", "file:" + xmlSourcePathDir);
 			transformer.setParameter("base_add", baseURI);
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 			long start = System.currentTimeMillis();
+			bos=new ByteArrayOutputStream();
+			 StreamResult result=new StreamResult(bos);
 			transformer.transform(new StreamSource(new File(xmlSourcePath)),  
-					 new StreamResult(new File(rdfFileOutputName)));
+					 result);
 			long end = System.currentTimeMillis();
-			log.info("Duration: " + (end-start) + " milliseconds");
+			log.info("Duration of transformation of " + rdfFileOutputName + " : " + ((end-start)) + " milliseconds");
+			
 		} catch (TransformerConfigurationException e) {
 			log.error("ERROR: TransformerConfigurationException, caused by: " + e.getCause());
 		} catch (TransformerException e) {
 			log.error("ERROR: TransformerException, caused by: " + e.getCause());
 		} catch (ConverterException e) {
 			log.error("ERROR: ConverterException, caused by: " + e.getCause());
-		}    
+		}
+		return bos;    
     }     
 }  

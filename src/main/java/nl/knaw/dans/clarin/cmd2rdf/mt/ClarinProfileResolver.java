@@ -5,14 +5,14 @@ package nl.knaw.dans.clarin.cmd2rdf.mt;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -37,8 +37,17 @@ public class ClarinProfileResolver implements URIResolver {
 	private static final Logger log = LoggerFactory.getLogger(ClarinProfileResolver.class);
 	private String basePath;
 	private CacheService<Object, Object> cacheservice;
+	private String registry;
+	public ClarinProfileResolver(String basePath, String registry, CacheService<Object, Object> cacheservice) throws ConverterException {
+		createCacheTempIfAbsent(basePath);
+		this.registry = registry;
+		this.basePath = basePath;
+		this.cacheservice = cacheservice;
+	}
+	
 	public ClarinProfileResolver(String basePath, CacheService<Object, Object> cacheservice) throws ConverterException {
 		createCacheTempIfAbsent(basePath);
+		this.registry = "http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/";
 		this.basePath = basePath;
 		this.cacheservice = cacheservice;
 	}
@@ -59,9 +68,21 @@ public class ClarinProfileResolver implements URIResolver {
 
 	  
 	public Source resolve(String href,String base) throws TransformerException {
+		if (href.contains("p_1360230992133")) {
+			log.info("href: " + href);
+			log.info("href size: " + href.length());
+			try {
+				String decoded = URLDecoder.decode(href, "UTF-8");
+				log.info("decode: " + decoded);
+				log.info("decode size: " + decoded.length());
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		log.debug("Profile URI: " + href);
 		log.debug("xsl base: " + base);
-		String filename = href.replace("http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/", "");//TODO: Don't use hard coded!!!
+		String filename = href.replace(registry, "");//TODO: Don't use hard coded!!!
 		filename = filename.replace("/xml", ".xml");
 		filename = filename.replace(":", "_");
 	    
@@ -90,7 +111,11 @@ public class ClarinProfileResolver implements URIResolver {
 					try {
 						rwl.writeLock().lock();
 				        rwl.readLock().lock();
-						url = new URL(href);
+				        if (href.contains("p_1360230992133")) {
+				        	href = "http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1360230992133/xml";
+				        	filename = "clarin.eu_cr1_p_1360230992133.xml";
+				        }
+				        url = new URL(href);
 						BufferedReader in = new BufferedReader(
 						        new InputStreamReader(url.openStream()));
 						 String inputLine;

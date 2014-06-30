@@ -23,6 +23,12 @@ public abstract class RdfStore {
 		this.password = password;
 	}
 	
+	protected RdfStore(String serverURL, String username, String password){
+		this.serverURL = serverURL;
+		this.username = username;
+		this.password = password;
+	}
+	
 	protected String getServerURL() {
 		return serverURL;
 	}

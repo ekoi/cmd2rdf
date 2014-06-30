@@ -18,9 +18,12 @@ public class Clazz {
 	@XmlAttribute
 	String name;
 	
-	@XmlElementWrapper(name = "arguments")
-	@XmlElement(name="argument")
-	List<Argument> arguments;
+	@XmlAttribute
+	String methodToExecute;
+	
+	@XmlElementWrapper(name = "args")
+	@XmlElement(name="arg")
+	List<Arg> arguments;
 	
 	
 	
