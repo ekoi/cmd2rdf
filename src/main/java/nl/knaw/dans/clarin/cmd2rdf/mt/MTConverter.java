@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 
 import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.directmemory.DirectMemory;
 import org.apache.directmemory.cache.CacheService;
@@ -24,14 +25,14 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * @author akmi
+ * @author Eko Indarto
  *
  */
-public class ThreadPoolConverter {
+public class MTConverter {
 	
 	//private static List<String> profilesList = Collections.synchronizedList(new ArrayList<String>());
 	//final BlockingQueue<File> bq = new ArrayBlockingQueue<File>(26);
-	private static final Logger log = LoggerFactory.getLogger(ThreadPoolConverter.class);
+	private static final Logger log = LoggerFactory.getLogger(MTConverter.class);
 	private static final CacheService<Object, Object> cacheService = new DirectMemory<Object, Object>()
 		    .setNumberOfBuffers( 75 )
 		    .setSize( 1000000 )
@@ -46,8 +47,11 @@ public class ThreadPoolConverter {
 	private String cacheBasePathDir;
 	private String nThreads;
 	private String registry;
+	private String virtuosoUrl;
+	private String virtuosoUser;
+	private String virtuosoPass;
 	 
-	public ThreadPoolConverter(){
+	public MTConverter(){
 	}
 	
 	public void process() {  
@@ -63,14 +67,19 @@ public class ThreadPoolConverter {
     	
     	log.debug("===== Multithreading Processing " + lf.size() + " list of files.======");
     	
+//    	 List<List<File>> subSets = ListUtils.partition(lf, Integer.parseInt(nThreads));
+// 	    for (List<File> fs : subSets) {
+//    		execute(xmlSrcPathDir, xsltPath, rdfOutputDir, baseURI,
+//				cacheBasePathDir, registry, fs, Integer.parseInt(nThreads));
+// 	    }
     	
-    		execute(xmlSrcPathDir, xsltPath, rdfOutputDir, baseURI,
+    	execute(xmlSrcPathDir, xsltPath, rdfOutputDir, baseURI,
 				cacheBasePathDir, registry, lf, Integer.parseInt(nThreads));
     
     }
 
 	
-	private static void execute(String xmlSourcePathDir, String xsltPath,
+	private void execute(String xmlSourcePathDir, String xsltPath,
 			String rdfOutpuDir, String baseURI, String cacheBasePathDir, 
 			String registry, List<File> files, int nThreads) {
 	    System.out.println(nThreads);
@@ -79,7 +88,7 @@ public class ThreadPoolConverter {
     	 for (File file : files) {
     		 
              Runnable worker = new WorkerThread(file, xmlSourcePathDir, baseURI, 
-            		 					rdfOutpuDir, xsltPath, cacheBasePathDir, registry, cacheService);
+            		 					rdfOutpuDir, xsltPath, cacheBasePathDir, registry, cacheService, virtuosoUrl, virtuosoUser, virtuosoPass);
              executor.execute(worker);
            }
          executor.shutdown();
@@ -94,6 +103,86 @@ public class ThreadPoolConverter {
 			log.error("ERROR caused by IOException, msg:  " + e.getMessage());
 			e.printStackTrace();
 		}
+	}
+
+	public String getXmlSrcPathDir() {
+		return xmlSrcPathDir;
+	}
+
+	public void setXmlSrcPathDir(String xmlSrcPathDir) {
+		this.xmlSrcPathDir = xmlSrcPathDir;
+	}
+
+	public String getXsltPath() {
+		return xsltPath;
+	}
+
+	public void setXsltPath(String xsltPath) {
+		this.xsltPath = xsltPath;
+	}
+
+	public String getRdfOutputDir() {
+		return rdfOutputDir;
+	}
+
+	public void setRdfOutputDir(String rdfOutputDir) {
+		this.rdfOutputDir = rdfOutputDir;
+	}
+
+	public String getBaseURI() {
+		return baseURI;
+	}
+
+	public void setBaseURI(String baseURI) {
+		this.baseURI = baseURI;
+	}
+
+	public String getCacheBasePathDir() {
+		return cacheBasePathDir;
+	}
+
+	public void setCacheBasePathDir(String cacheBasePathDir) {
+		this.cacheBasePathDir = cacheBasePathDir;
+	}
+
+	public String getnThreads() {
+		return nThreads;
+	}
+
+	public void setnThreads(String nThreads) {
+		this.nThreads = nThreads;
+	}
+
+	public String getRegistry() {
+		return registry;
+	}
+
+	public void setRegistry(String registry) {
+		this.registry = registry;
+	}
+
+	public String getVirtuosoUrl() {
+		return virtuosoUrl;
+	}
+
+	public void setVirtuosoUrl(String virtuosoUrl) {
+		this.virtuosoUrl = virtuosoUrl;
+	}
+
+	public String getVirtuosoUser() {
+		return virtuosoUser;
+	}
+
+	public void setVirtuosoUser(String virtuosoUser) {
+		this.virtuosoUser = virtuosoUser;
+	}
+
+	public String getVirtuosoPass() {
+		return virtuosoPass;
+	}
+
+	public void setVirtuosoPass(String virtuosoPass) {
+		this.virtuosoPass = virtuosoPass;
 	}  
     
     

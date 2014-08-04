@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name="CMD2RDF")
 public class Jobs {
 	private Config config;
+	private Prepare prepare;
 	private Record record;
 	
 	public void setConfig(Config config) {
@@ -20,5 +21,11 @@ public class Jobs {
 	}
 	public Record getRecord() {
 		return record;
+	}
+	public Prepare getPrepare() {
+		return prepare;
+	}
+	public void setPrepare(Prepare prepare) {
+		this.prepare = prepare;
 	}
 }

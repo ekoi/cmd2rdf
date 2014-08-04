@@ -24,11 +24,18 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 	public void processRecord(Jobs job)
 			throws Exception {
 		setupGlolbalConfiguration(job);
-		
-		Record r = job.getRecord();
-		List<Action> list = r.actions;
+		Prepare p = job.getPrepare();
+		List<Action> list = p.actions;
+		doProcess(job.getPrepare().actions);
+		doProcess(job.getRecord().actions);
+	}
+
+
+	private void doProcess(List<Action> list) throws ClassNotFoundException,
+			InstantiationException, IllegalAccessException,
+			NoSuchFieldException, NoSuchMethodException,
+			InvocationTargetException {
 		for (Action act : list) {
-			//if (act.name.equals("java")) {
 			System.out.println(act.clazz.name);
 			Class<?> clazz = Class.forName(act.clazz.name);
 			Object clazzObj = clazz.newInstance();
@@ -52,8 +59,10 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 				
 		    }
 			System.out.println(act.clazz.methodToExecute);
-			Method method = clazz.getDeclaredMethod(act.clazz.methodToExecute);
-			method.invoke(clazzObj);
+			if (act.clazz.methodToExecute != null) {
+				Method method = clazz.getDeclaredMethod(act.clazz.methodToExecute);
+				method.invoke(clazzObj);
+			}
 		}
 	}
 
@@ -70,6 +79,4 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		}
 	}
 	
-	
-
 }

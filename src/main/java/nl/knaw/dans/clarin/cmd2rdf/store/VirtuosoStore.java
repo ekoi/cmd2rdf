@@ -42,13 +42,15 @@ public class VirtuosoStore extends RdfStore implements RdfHandler{
 
 	public boolean save(byte[] bytes, String graphUri) {
 		try {
+			graphUri = graphUri.replace("FOLDER-A", "FOLDER-X");
 			UriBuilder uriBuilder = UriBuilder.fromUri(new URI(getServerURL()));
+			graphUri = graphUri.replaceAll(" ", "_");
 			uriBuilder.queryParam(NAMED_GRAPH_IRI, graphUri);
-			
 			WebTarget target = client.target(uriBuilder.build());
-			Response response = target.request()
-                    .post(Entity.entity(bytes, MediaType.APPLICATION_OCTET_STREAM));
-			if (response.getStatus() == 201)
+			Response response = target.request().post(Entity.entity(bytes, MediaType.APPLICATION_OCTET_STREAM));
+			int status = response.getStatus();
+			log.debug("response status: " + status);
+			if ((status == Response.Status.CREATED.getStatusCode()) || (status == Response.Status.OK.getStatusCode()))
 				return true;
 		} catch (URISyntaxException e) {
 			log.error("ERROR: URISyntaxException, caused by: " + e.getMessage());

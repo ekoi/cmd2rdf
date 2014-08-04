@@ -37,6 +37,13 @@ public class Converter {
 	private Templates cachedXSLT;
 	
 	
+	public Converter( String xmlSourcePathDir,  String cacheBasePathDir,  Templates cachedXSLT){
+		this.xmlSourcePathDir = xmlSourcePathDir;
+		this.cacheBasePathDir = cacheBasePathDir;
+		this.cachedXSLT = cachedXSLT;
+		
+	}
+	
 	public Converter( String xmlSourcePathDir, String xsltPath, String cacheBasePathDir){
 		this.xmlSourcePathDir = xmlSourcePathDir;
 		this.cacheBasePathDir = cacheBasePathDir;

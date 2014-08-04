@@ -8,44 +8,95 @@
       - output directory
       - Virtuoso or even a general endpoint that supports the Graph Store HTTP protocol (http://www.w3.org/TR/sparql11-http-rdf-update/)
       - ...
--i '/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-xml'
--x /Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/CMD2RDF-SVN/CMD2RDF/trunk/xsl/CMDRecord2RDF.xsl
- -o /Users/akmi/eko77
--b "http://localhost:8081/DAV"
--c /Users/akmi/eko77-cache
     -->
-    	<harvestedRecordsLocation>/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-xml</harvestedRecordsLocation>
- 	   	<homedir>/Users/akmi/Dropbox</homedir>
- 	   	<rdfOutpuDirectory>/Users/akmi/rdf-output</rdfOutpuDirectory>
- 	   	<profileCacheLocation>/Users/akmi/profile-cache</profileCacheLocation>
- 	   	<xslSourceDir>/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/CMD2RDF-SVN/CMD2RDF/trunk/xsl</xslSourceDir>
- 	   	<baseUri>http://localhost:8081/DAV</baseUri>
- 	   	<numberOfThreads>6</numberOfThreads>
-    	<virtuosoUrl>localhost:8890</virtuosoUrl>
+    	<oai-pmh-baseUrl>http://easy.dans.knaw.nl/oai</oai-pmh-baseUrl>
+    	<harvestedRecordDir>/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-xml</harvestedRecordDir>
+ 	   	<homedir>/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace</homedir>
+ 	   	<rdfOutputDir>/Users/akmi/rdf-output</rdfOutputDir>
+ 	   	<profileCacheLoc>/Users/akmi/profile-cache</profileCacheLoc>
+ 	   	<xslDir>/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/CMD2RDF-SVN/CMD2RDF/trunk/xsl</xslDir>
+ 	   	<baseUri>http://localhost:8000/DAV/XXX</baseUri>
+ 	   	<virtuosoUrl>localhost:8000</virtuosoUrl>
+ 	   	<virtuosoUser>dba</virtuosoUser>
+ 	   	<virtuosoPass>dba</virtuosoPass>
     </config>
-    <record>
-    	<actions>
-        <action name="transform">
-        	<class name="nl.knaw.dans.clarin.cmd2rdf.mt">
-        	<arguments>
-	        	<argument name="stylesheet">
-        			<param name ="href">$homedir$/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/CMD2RDF-SVN/CMD2RDF/trunk/xsl/CMDRecord2RDF.xsl</param>>
-        			<param name="registry">http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/</param>>
-        		</argument>
-        		<argument name="numberOfThreads">
-        			<param>3</param>
-				</argument>
-        		<argument name="output">
-        			<param>https://$virtuosoUrl$//sparql-graph-crud-auth/</param>
-        		</argument>
-        	</arguments>
-            </class>
-        </action>
-        <action name="java">
-            <class name="eu.clarin.cmd2rdf.findOrganisationNames"/>
-        </action>
-        <!-- ... other actions ... -->
-      </actions>
+    <prepare>
+        <actions>
+            <action name="checksum">
+                <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.ChecksumDbMain" methodToExecute="checkDiff">
+                    <args>
+                        <arg name="xmlSrcPathDir">$homedir$/data/cmd-xml/FOLDER1</arg>
+                        <arg name="dbname">DB_CMD_CHECKSUM</arg>
+                    </args>
+                </class>
+            </action>
+            <action name="fetch">
+                <class name="nl.knaw.dans.clarin.cmd2rdf.oai.harvestSet" methodToExecute="checkDiff">
+                    <args>
+                        <arg name="setURI">https://openskos.meertens.knaw.nl/oai-pmh?verb=ListRecords&amp;amp;set=meertens:VLO-orgs&amp;amp;metadataPrefix=oai_rdf</arg>
+                        <arg name="setOutputFile">$homedir$/tmp/meertens-VLO-orgs.rdf</arg>
+                    </args>
+                </class>
+            </action>
+        </actions>
+    </prepare>
+    <record filter="NEW, UPDATE">
+        <actions>
+            <action name="transform">
+                <class name="nl.knaw.dans.clarin.cmd2rdf.mt.MTConverter" methodToExecute="process">
+                    <!-- ThreadPoolConverter(String xmlSrcPathDir, String xsltPath
+			, String rdfOutputDir, String baseURI, String cacheBasePathDir, String registry, int nThreads). Todo, use set & get -->
+                    <args>
+                        <arg name="xmlSrcPathDB">DB_CMD_CHECKSUM</arg>
+                        <arg name="xsltPath">$homedir$/CMD2RDF-SVN/CMD2RDF/trunk/xsl/CMDRecord2RDF.xsl</arg>
+                        <arg name="rdfOutputDir">$homedir$/output</arg>
+                        <arg name="baseURI">http://localhost:8888/DAV</arg>
+                        <arg name="virtuosoUrl">http://localhost:8000/sparql-graph-crud-auth?</arg>
+                        <arg name="virtuosoUser">dba</arg>
+                        <arg name="virtuosoPass">dba</arg>
+                        <arg name="cacheBasePathDir">$homedir$/cache-profile</arg>
+                        <arg name="registry">http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/</arg>
+                        <arg name="nThreads">10</arg>
+                    </args>
+                </class>
+            </action>
+            <action>
+                <class name="nl.knaw.dans.clarin.cmd2rdf.Xslt" methodToExecute="transform">
+                    <stylesheet href="addOrganisationEntity.xsl">
+                        <with-param name="VLO-orgs" file="$homedir$/tmp/meertens-VLO-orgs.rdf"/>
+                    </stylesheet>
+                </class>
+            </action>
+            <action>
+                <class name="nl.knaw.dans.clarin.cmd2rdf.mt.MTConverter" methodToExecute="storeRdf">
+                    <args>
+                        <arg name="virtuosoUrl">http://localhost:8000/sparql-graph-crud-auth?</arg>
+                        <arg name="virtuosoUser">dba</arg>
+                        <arg name="virtuosoPass">dba</arg>
+                    </args>
+                </class>
+            </action>
+        </actions>
     </record>
+    <record filter="NEW, UPDATE">
+        <actions>
+            <action>
+                <class name="nl.knaw.dans.clarin.cmd2rdf.HttpClient" methodToExecute="doDelete">
+                    <!-- DELETE the Virtuoso named graph for removed CMDI records -->
+                </class>
+            </action>
+        </actions>
+    </record>
+    <cleanup>
+        <actions>
+            <action>
+                <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.ChecksumDbDelete" methodToExecute="cleanup">
+                    <args>
+                        <arg name="dbname">DB_CMD_CHECKSUM</arg>
+                    </args>
+                </class>
+            </action>
+        </actions>
+    </cleanup>
     
 </CMD2RDF>

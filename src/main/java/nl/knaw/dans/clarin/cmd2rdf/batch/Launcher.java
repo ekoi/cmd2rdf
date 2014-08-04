@@ -13,11 +13,16 @@ import java.net.URL;
 import java.nio.file.Paths;
 
 public class Launcher {
-
+//start virtuosovirtuoso-t +foreground +configfile `find /usr/local -name virtuoso.ini`
     public static void main(String[] args) throws Exception {
-    	URL resource = Launcher.class.getResource("/cmd2rdf-jobs.xml");
-    	File f = Paths.get(resource.toURI()).toFile();
-    	System.out.println(f);
+    	//Thread.sleep(30000);
+    	File f = null;
+    	if (args != null && args.length == 1)
+    		f = new File (args[0]);
+    	else {
+    		URL resource = Launcher.class.getResource("/Users/akmi/Desktop/cmd2rdf-jobs.xml");
+    		f = Paths.get(resource.toURI()).toFile();
+    	}
         // Build an easy batch engine
         EasyBatchEngine easyBatchEngine = new EasyBatchEngineBuilder()
                 .registerRecordReader(new XmlRecordReader("CMD2RDF", f))

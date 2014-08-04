@@ -16,8 +16,8 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
-import nl.knaw.dans.clarin.cmd2rdf.ClarinProfileResolver;
-import nl.knaw.dans.clarin.cmd2rdf.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.mt.ClarinProfileResolver;
 
 import org.apache.commons.io.FileUtils;
 import org.joda.time.DateTime;
@@ -73,26 +73,26 @@ public class Apps {
         XsltCompiler comp = proc.newXsltCompiler();
         XsltExecutable exp;
         Serializer out = new Serializer();
-		try {
-           exp = comp.compile(new StreamSource(new File("/Users/akmi/git/cmd2rdf/src/main/resources/xsl/CMDRecord2RDF.xsl")));
-            XdmNode source = proc.newDocumentBuilder().build(new StreamSource(new File("/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-xml/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus.xml")));
-            URIResolver resolver = (URIResolver) new ClarinProfileResolver("tmp-cache");
-            out.setOutputProperty(Serializer.Property.METHOD, "xml");
-            out.setOutputProperty(Serializer.Property.INDENT, "yes");
-            out.setOutputFile(new File("/Users/akmi/eko99-1/output/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus1.rdf"));
-            XsltTransformer trans = exp.load();
-            trans.setInitialContextNode(source);
-            trans.setParameter(new QName("base"), new XdmAtomicValue("http://localhost:8081/DAV/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus.rdf"));
-            trans.setURIResolver(resolver);
-            trans.setDestination(out);
-            trans.transform();
-		} catch (SaxonApiException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ConverterException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//           exp = comp.compile(new StreamSource(new File("/Users/akmi/git/cmd2rdf/src/main/resources/xsl/CMDRecord2RDF.xsl")));
+//            XdmNode source = proc.newDocumentBuilder().build(new StreamSource(new File("/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-xml/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus.xml")));
+//            URIResolver resolver = (URIResolver) new ClarinProfileResolver("tmp-cache");
+//            out.setOutputProperty(Serializer.Property.METHOD, "xml");
+//            out.setOutputProperty(Serializer.Property.INDENT, "yes");
+//            out.setOutputFile(new File("/Users/akmi/eko99-1/output/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus1.rdf"));
+//            XsltTransformer trans = exp.load();
+//            trans.setInitialContextNode(source);
+//            trans.setParameter(new QName("base"), new XdmAtomicValue("http://localhost:8081/DAV/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus.rdf"));
+//            trans.setURIResolver(resolver);
+//            trans.setDestination(out);
+//            trans.transform();
+//		} catch (SaxonApiException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (ConverterException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
     	
 	}
 }
