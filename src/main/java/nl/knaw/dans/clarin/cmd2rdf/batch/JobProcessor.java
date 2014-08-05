@@ -25,9 +25,9 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			throws Exception {
 		setupGlolbalConfiguration(job);
 		Prepare p = job.getPrepare();
-		List<Action> list = p.actions;
-		doProcess(job.getPrepare().actions);
-		doProcess(job.getRecord().actions);
+		//doProcess(job.getPrepare().actions);
+		List<Record> records = job.records;
+		doProcess(records.get(0).actions);
 	}
 
 

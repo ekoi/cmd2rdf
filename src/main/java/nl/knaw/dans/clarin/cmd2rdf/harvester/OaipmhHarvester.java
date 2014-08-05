@@ -5,16 +5,15 @@ package nl.knaw.dans.clarin.cmd2rdf.harvester;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentFactory;
-import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.io.XMLWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import se.kb.oai.OAIException;
 import se.kb.oai.pmh.OaiPmhServer;
@@ -23,32 +22,35 @@ import se.kb.oai.pmh.RecordsList;
 import se.kb.oai.pmh.ResumptionToken;
 
 /**
- * @author akmi
+ * @author Eko Indarto
  *
  */
 public class OaipmhHarvester {
+	private static final Logger log = LoggerFactory.getLogger(OaipmhHarvester.class);
 	private static boolean asRoot = true;
-
+	private static final String PREFIFX = "oai_rdf";
+	private static final String SET = "meertens:VLO-orgs";
+	private String baseUrl;
+	private String outputFile;
 	/**
 	 * @param args
 	 * @throws DocumentException 
 	 * @throws IOException 
 	 */
-	public static void main(String[] args) throws DocumentException, IOException {
+	public void harvest(){
+		log.debug("Harvesting process.");
 		Document doc = DocumentFactory.getInstance()
 				.createDocument();
 		Element rootElement = null;
-		String baseUrl = "https://openskos.meertens.knaw.nl/oai-pmh";
 		OaiPmhServer server = new OaiPmhServer(baseUrl);
-
-		String prefix = "oai_rdf";
-		String set = "meertens:VLO-orgs";
+		log.debug("baseUrl: " + baseUrl);
+		log.debug("prefix: " + PREFIFX);
+		log.debug("SET: " + SET);
 		try {
 			RecordsList records = server.listRecords(
-					prefix, null, null,
-					set);
+					PREFIFX, null, null,
+					SET);
 			boolean more = true;
-			int x = 0;
 			while (more) {
 				for (Record record : records.asList()) {
 					if (record != null) {
@@ -80,13 +82,30 @@ public class OaipmhHarvester {
 			e.printStackTrace();
 		}
 		doc.add(rootElement);
-		System.out.println(doc.asXML());
 		 // lets write to a file
-        XMLWriter writer = new XMLWriter(
-            new FileWriter( "/Users/akmi/output.rdf" )
-        );
-        writer.write( doc );
-        writer.close();
+        XMLWriter writer;
+		try {
+			writer = new XMLWriter(
+			    new FileWriter( outputFile )
+			);
+			log.debug("Writing rdf file to " + outputFile);
+			writer.write( doc );
+			 writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	public String getBaseUrl() {
+		return baseUrl;
+	}
+	public void setBaseUrl(String baseUrl) {
+		this.baseUrl = baseUrl;
+	}
+	public String getOutputFile() {
+		return outputFile;
+	}
+	public void setOutputFile(String outputFile) {
+		this.outputFile = outputFile;
 	}
 
 }
