@@ -56,7 +56,7 @@ public class MTConverter {
 		mtc.setRegistry("registry");
 		
 		//Go to db
-		mtc.setXmlSrcPathDir("/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-xml");
+		mtc.setXmlSrcPathDir("/Users/akmi/eko-xml-data");
 		
 		
 		mtc.process();
@@ -79,7 +79,8 @@ public class MTConverter {
 		System.out.println(cacheBasePathDir);
     	log.debug("===== Collect list of files.======");
     	
-    	Converter converter = new Converter(xmlSrcPathDir, xsltPath, cacheBasePathDir, registry, baseURI);
+    	XmlToRdfConverter converter = new XmlToRdfConverter(xmlSrcPathDir, xsltPath, cacheBasePathDir, registry, baseURI);
+    	converter.startUpCacheService();
     	
     	Collection<File> listFiles = FileUtils.listFiles(new File(xmlSrcPathDir),new String[] {"xml"}, true);
     	List<Map.Entry> shortedMap = Misc.shortedBySize(listFiles);
@@ -93,11 +94,12 @@ public class MTConverter {
     	
     	
     	execute(Integer.parseInt(nThreads), lf, converter, virtuosoStore);
+    	converter.shutDownCacheService();
     
     }
 
 	
-	private void execute(int nThreads, List<File> files, Converter converter,
+	private void execute(int nThreads, List<File> files, XmlToRdfConverter converter,
 			 VirtuosoStore virtuosoStore) {
 	    System.out.println(nThreads);
 		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
