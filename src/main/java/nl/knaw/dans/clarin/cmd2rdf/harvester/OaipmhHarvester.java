@@ -38,6 +38,9 @@ public class OaipmhHarvester {
 	 * @throws IOException 
 	 */
 	public void harvest(){
+		log.debug("OaipmhHarvester variables: ");
+		log.debug("baseUrl: " + baseUrl);
+		log.debug("outputFile: " + outputFile);
 		log.debug("Harvesting process.");
 		Document doc = DocumentFactory.getInstance()
 				.createDocument();

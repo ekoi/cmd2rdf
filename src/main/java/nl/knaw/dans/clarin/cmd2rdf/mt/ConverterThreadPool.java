@@ -50,8 +50,8 @@ public class ConverterThreadPool {
 	private static final Logger log = LoggerFactory.getLogger(ConverterThreadPool.class);
 	private static final CacheService<Object, Object> cacheService = new DirectMemory<Object, Object>()
 		    .setNumberOfBuffers( 75 )
-		    .setSize( 1000000 )
-		    .setInitialCapacity( 10000 )
+		    .setSize( 1000 )
+		    .setInitialCapacity( 100 )
 		    .setConcurrencyLevel( 4 )
 		    .newCacheService();
 	
@@ -94,8 +94,8 @@ public class ConverterThreadPool {
     	log.debug("===== Multithreading Processing " + lf.size() + " list of files.======");
     	
     	
-    		execute(xmlSourcePathDir, xsltPath, rdfOutpuDir, baseURI,
-				cacheBasePathDir, lf	);
+//    		execute(xmlSourcePathDir, xsltPath, rdfOutpuDir, baseURI,
+//				cacheBasePathDir, lf	);
     	
     	DateTime end = new DateTime();
     	Period duration = new Period(start, end);
@@ -110,32 +110,32 @@ public class ConverterThreadPool {
     }
 
 	
-	private static void execute(String xmlSourcePathDir, String xsltPath,
-			String rdfOutpuDir, String baseURI, String cacheBasePathDir,
-			List<File> files) {
-		int nThreads = Runtime.getRuntime().availableProcessors();
-	    System.out.println(nThreads);
-		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
-		log.info("@@@ begin of execution, size: " + files.size() );
-    	 for (File file : files) {
-    		 
-             Runnable worker = new WorkerThread(file, xmlSourcePathDir, baseURI, 
-            		 					rdfOutpuDir, xsltPath, cacheBasePathDir, cacheService);
-             executor.execute(worker);
-           }
-         executor.shutdown();
-         
-         while (!executor.isTerminated()) {}
-         
-         log.info("Finished all threads");
-         cacheService.clear();
-         try {
-			cacheService.close();
-		} catch (IOException e) {
-			log.error("ERROR caused by IOException, msg:  " + e.getMessage());
-			e.printStackTrace();
-		}
-	}  
+//	private static void execute(String xmlSourcePathDir, String xsltPath,
+//			String rdfOutpuDir, String baseURI, String cacheBasePathDir,
+//			List<File> files) {
+//		int nThreads = Runtime.getRuntime().availableProcessors();
+//	    System.out.println(nThreads);
+//		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+//		log.info("@@@ begin of execution, size: " + files.size() );
+//    	 for (File file : files) {
+//    		 
+//             Runnable worker = new WorkerThread(file, xmlSourcePathDir, baseURI, 
+//            		 					rdfOutpuDir, xsltPath, cacheBasePathDir, cacheService);
+//             executor.execute(worker);
+//           }
+//         executor.shutdown();
+//         
+//         while (!executor.isTerminated()) {}
+//         
+//         log.info("Finished all threads");
+//         cacheService.clear();
+//         try {
+//			cacheService.close();
+//		} catch (IOException e) {
+//			log.error("ERROR caused by IOException, msg:  " + e.getMessage());
+//			e.printStackTrace();
+//		}
+//	}  
     
     private static JSAPResult checkArgument(String[] args) throws JSAPException {
     	JSAP jsap = new JSAP();

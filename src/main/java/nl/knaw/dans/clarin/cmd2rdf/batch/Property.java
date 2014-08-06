@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlValue;
  */
 @SuppressWarnings("restriction")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Arg {
+public class Property {
 	@XmlAttribute
 	String name;
 	

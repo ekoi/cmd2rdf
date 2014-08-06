@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Config {
 	
+	
 	@XmlAttribute
 	String version;
 	
@@ -17,10 +18,15 @@ public class Config {
 	String harvestedRecordDir;
 	String rdfOutputDir;
 	String profileCacheLoc;
-	String baseUri;
+	String baseUri;//TODO DELETE
+	String urlDB;
 	String virtuosoUrl;
 	String virtuosoUser;
 	String virtuosoPass;
+	String a;
+	public String getA() {
+		return a;
+	}
 	public String getVersion() {
 		return version;
 	}
@@ -44,6 +50,9 @@ public class Config {
 	}
 	public String getBaseUri() {
 		return baseUri;
+	}
+	public String getUrlDB() {
+		return urlDB;
 	}
 	public String getVirtuosoUrl() {
 		return virtuosoUrl;

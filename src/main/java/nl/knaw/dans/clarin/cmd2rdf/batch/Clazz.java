@@ -21,9 +21,9 @@ public class Clazz {
 	@XmlAttribute
 	String methodToExecute;
 	
-	@XmlElementWrapper(name = "args")
-	@XmlElement(name="arg")
-	List<Arg> arguments;
+	@XmlElementWrapper(name = "properties")
+	@XmlElement(name="property")
+	List<Property> property;
 	
 	
 	

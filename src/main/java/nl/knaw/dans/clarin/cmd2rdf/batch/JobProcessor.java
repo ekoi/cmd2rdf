@@ -24,10 +24,11 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 	public void processRecord(Jobs job)
 			throws Exception {
 		setupGlolbalConfiguration(job);
-		Prepare p = job.getPrepare();
-		//doProcess(job.getPrepare().actions);
+		doProcess(job.getPrepare().actions);
 		List<Record> records = job.records;
-		doProcess(records.get(0).actions);
+		Record r = records.get(0);
+		//r.filter
+		doProcess(r.actions);
 	}
 
 
@@ -39,16 +40,17 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			System.out.println(act.clazz.name);
 			Class<?> clazz = Class.forName(act.clazz.name);
 			Object clazzObj = clazz.newInstance();
-			List<Arg> args = act.clazz.arguments;
-			for (Arg arg : Misc.emptyIfNull(args)) {
+			List<Property> args = act.clazz.property;
+			for (Property arg : Misc.emptyIfNull(args)) {
 				String pName = arg.name;
-				System.out.println(pName);
 				String pVal = arg.value;
+				System.out.println("pName: " + pName + "\tpVal: " + pVal);
 				Matcher m = pattern.matcher(pVal);
 				if (m.find()) {
 					String globalVar = m.group(1);
 					if (GLOBAL_VARS.containsKey(globalVar)) {
 						pVal = pVal.replace(m.group(0), GLOBAL_VARS.get(globalVar));
+						System.out.println("pVal contains global, pVal: " + pVal);
 					}
 				}
 				Field f = clazz.getDeclaredField(pName);
@@ -76,6 +78,19 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		    String propertyName = propertyDesc.getName();
 		    Object value = propertyDesc.getReadMethod().invoke(c);
 		    GLOBAL_VARS.put(propertyName, String.valueOf(value));
+		}
+		//iterate through map, find whether map values contain $val$
+		for (Map.Entry<String, String> e : GLOBAL_VARS.entrySet()) {
+			String pVal = e.getValue();
+			Matcher m = pattern.matcher(pVal);
+			if (m.find()) {
+				String globalVar = m.group(1);
+				if (GLOBAL_VARS.containsKey(globalVar)) {
+					pVal = pVal.replace(m.group(0), GLOBAL_VARS.get(globalVar));
+					System.out.println("pVal contains global, pVal: " + pVal);
+					GLOBAL_VARS.put(e.getKey(), pVal);
+				}
+			}
 		}
 	}
 	

@@ -13,9 +13,12 @@ import com.twmacinta.util.MD5;
 
 public class ChecksumDbMain {
 	private static final Logger log = LoggerFactory.getLogger(ChecksumDbMain.class);
-	private String dbname;
+	private String urlDB;
 	private String xmlSrcPathDir;
 	public void checkDiff() {
+		log.debug("ChecksumDbMain variables: ");
+		log.debug("dbname: " + urlDB);
+		log.debug("xmlSrcPathDir: " + xmlSrcPathDir);
 		long l=System.currentTimeMillis();
 		log.debug("START  - generateApacheMD5Checksum(file)");
 
@@ -23,7 +26,7 @@ public class ChecksumDbMain {
 		log.debug("Number of files: " + files.size());
 		log.debug("Listing process duration: " + (System.currentTimeMillis() -l)/1000 + " seconds.");
 		try {
-			ChecksumDb db = new ChecksumDb(dbname);
+			ChecksumDb db = new ChecksumDb(urlDB);
 			
 			db.process(xmlSrcPathDir, files);
 				//db.checkAndstore(basefolder, listFiles);
@@ -63,6 +66,8 @@ public class ChecksumDbMain {
 			basefolder = "/data/cmdi2rdf/resultsets/results/cmdi";
 
 		ChecksumDbMain cdbm = new ChecksumDbMain();
+		cdbm.urlDB = "/Users/akmi/eko-db-test/" + dbname;
+		cdbm.xmlSrcPathDir = basefolder;
 		cdbm.checkDiff();
 		
 

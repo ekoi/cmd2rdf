@@ -28,7 +28,10 @@ public class ChecksumDb {
 	private static final String TABLE_NAME = "CMD_MD5";
 	private static final String UPDATE_PREPARED_STATEMENT = "UPDATE " + TABLE_NAME + " SET md5 = ?, action=? WHERE path = ?";
 	private static final String INSERT_PREPARED_STATEMENT = "INSERT INTO " + TABLE_NAME + "(path, md5, action) VALUES(?,?,?)";
-	private static final String NEW_OR_UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.NEW + "' OR action ='" + ActionStatus.UPDATE;
+	private static final String NEW_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.NEW + "'";
+	private static final String UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.UPDATE + "'";
+	private static final String NEW_OR_UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.NEW + "' OR action ='" + ActionStatus.UPDATE + "'";
+	
 	private static boolean initialdata = false;
 	private static long totalQueryDuration;
 	private static long totalMD5GeneratedTime;
@@ -116,6 +119,34 @@ public class ChecksumDb {
         st.close();
     }    
     
+    public List<String> getNewRecords() throws SQLException {
+    	List<String> paths = new ArrayList<String>();
+    	long t = System.currentTimeMillis();
+        Statement st = conn.createStatement();        
+        ResultSet rs = st.executeQuery(NEW_RECORD_QUERY);    
+        for (; rs.next(); ) {
+        	String path = rs.getString("path"); 
+        	paths.add(path);
+        }
+        st.close(); 
+        long duration = (System.currentTimeMillis()-t);
+        log.debug("Checksum query NEW_RECORD_QUERY needs " + duration + " milliseconds.");
+    	return paths;
+    }
+    public List<String> getUpdatedRecords() throws SQLException {
+    	List<String> paths = new ArrayList<String>();
+    	long t = System.currentTimeMillis();
+        Statement st = conn.createStatement();        
+        ResultSet rs = st.executeQuery(UPDATED_RECORD_QUERY);    
+        for (; rs.next(); ) {
+        	String path = rs.getString("path"); 
+        	paths.add(path);
+        }
+        st.close(); 
+        long duration = (System.currentTimeMillis()-t);
+        log.debug("Checksum query UPDATED_RECORD_QUERY needs " + duration + " milliseconds.");
+    	return paths;
+    }
     public List<String> getNewOrUpdatedRecords() throws SQLException {
     	List<String> paths = new ArrayList<String>();
     	long t = System.currentTimeMillis();
@@ -127,7 +158,7 @@ public class ChecksumDb {
         }
         st.close(); 
         long duration = (System.currentTimeMillis()-t);
-        log.debug("Checksum query needs " + duration + " milliseconds.");
+        log.debug("Checksum query NEW_OR_UPDATED_RECORD_QUERY needs " + duration + " milliseconds.");
     	return paths;
     }
     
@@ -237,8 +268,8 @@ public class ChecksumDb {
             for (File file : files) {
             	nRecords++;
             	long a = System.currentTimeMillis();
-        		//String hash = generateFastMD5Checksum(file);
-        		String hash = generateApacheMD5Checksum(file);
+        		String hash = generateFastMD5Checksum(file);
+        		//String hash = generateApacheMD5Checksum(file);
         		totalhashingtime += (System.currentTimeMillis()-a);
         		nInsert++;
         		setInsertedRecord(psInsert, hash,  file.getAbsolutePath());
@@ -300,8 +331,8 @@ public class ChecksumDb {
             for (File file : files) {
             	nRecords++;
             	long a = System.currentTimeMillis();
-            	//String hash = MD5.asHex(MD5.getHash(file));
-            	String hash = generateApacheMD5Checksum(file);
+            	String hash = MD5.asHex(MD5.getHash(file));
+            	//String hash = generateApacheMD5Checksum(file);
         		totalhashingtime += (System.currentTimeMillis()-a);
         		String path = file.getAbsolutePath();
             	String checksum = getChecksumRecord(path);

@@ -4,22 +4,17 @@
 package nl.knaw.dans.clarin.cmd2rdf.mt;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import nl.knaw.dans.clarin.cmd2rdf.store.VirtuosoStore;
 import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.directmemory.DirectMemory;
-import org.apache.directmemory.cache.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,14 +28,10 @@ public class MTConverter {
 	//private static List<String> profilesList = Collections.synchronizedList(new ArrayList<String>());
 	//final BlockingQueue<File> bq = new ArrayBlockingQueue<File>(26);
 	private static final Logger log = LoggerFactory.getLogger(MTConverter.class);
-	private static final CacheService<Object, Object> cacheService = new DirectMemory<Object, Object>()
-		    .setNumberOfBuffers( 75 )
-		    .setSize( 1000000 )
-		    .setInitialCapacity( 10000 )
-		    .setConcurrencyLevel( 4 )
-		    .newCacheService();
 	
 	private String xmlSrcPathDir;
+	private String urlDB;
+	private String dbQueryCondition;
 	private String xsltPath;
 	private String rdfOutputDir;
 	private String baseURI;
@@ -54,9 +45,42 @@ public class MTConverter {
 	public MTConverter(){
 	}
 	
+	public static void main(String args[]) {
+		MTConverter mtc = new MTConverter();
+		mtc.setBaseURI("http://localhost:8888/DAV");
+		mtc.setCacheBasePathDir("/Users/akmi/eko-cache-profiles");
+		mtc.setnThreads("2");
+		mtc.setRdfOutputDir("/Users/akmi/eko-rdf-output");
+		mtc.setRegistry("http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/");
+		mtc.setXsltPath("/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/CMD2RDF-SVN/CMD2RDF/trunk/xsl/CMDRecord2RDF.xsl");
+		mtc.setRegistry("registry");
+		
+		//Go to db
+		mtc.setXmlSrcPathDir("/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-xml");
+		
+		
+		mtc.process();
+	}
+	
 	public void process() {  
+		log.debug("MTConverter variables: ");
+		log.debug("virtuosoUrl: " + virtuosoUrl);
+		log.debug("virtuosoUser: " + virtuosoUser);
+		log.debug("virtuosoPass: " + virtuosoPass);
+		log.debug("xmlSrcPathDir: " + xmlSrcPathDir);
+		log.debug("xsltPath: " + xsltPath);
+		log.debug("cacheBasePathDir: " + cacheBasePathDir);
+		log.debug("registry: " + registry);
+		log.debug("baseURI: " + baseURI);
+		log.debug("nThreads: " + nThreads);
+		
+		//VirtuosoStore virtuosoStore = new VirtuosoStore("http://localhost:8000/sparql-graph-crud-auth", "dba", "dba");
+		VirtuosoStore virtuosoStore = new VirtuosoStore(virtuosoUrl, virtuosoUser, virtuosoPass);
 		System.out.println(cacheBasePathDir);
     	log.debug("===== Collect list of files.======");
+    	
+    	Converter converter = new Converter(xmlSrcPathDir, xsltPath, cacheBasePathDir, registry, baseURI);
+    	
     	Collection<File> listFiles = FileUtils.listFiles(new File(xmlSrcPathDir),new String[] {"xml"}, true);
     	List<Map.Entry> shortedMap = Misc.shortedBySize(listFiles);
     	
@@ -67,28 +91,19 @@ public class MTConverter {
     	
     	log.debug("===== Multithreading Processing " + lf.size() + " list of files.======");
     	
-//    	 List<List<File>> subSets = ListUtils.partition(lf, Integer.parseInt(nThreads));
-// 	    for (List<File> fs : subSets) {
-//    		execute(xmlSrcPathDir, xsltPath, rdfOutputDir, baseURI,
-//				cacheBasePathDir, registry, fs, Integer.parseInt(nThreads));
-// 	    }
     	
-    	execute(xmlSrcPathDir, xsltPath, rdfOutputDir, baseURI,
-				cacheBasePathDir, registry, lf, Integer.parseInt(nThreads));
+    	execute(Integer.parseInt(nThreads), lf, converter, virtuosoStore);
     
     }
 
 	
-	private void execute(String xmlSourcePathDir, String xsltPath,
-			String rdfOutpuDir, String baseURI, String cacheBasePathDir, 
-			String registry, List<File> files, int nThreads) {
+	private void execute(int nThreads, List<File> files, Converter converter,
+			 VirtuosoStore virtuosoStore) {
 	    System.out.println(nThreads);
 		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 		log.info("@@@ begin of execution, size: " + files.size() );
     	 for (File file : files) {
-    		 
-             Runnable worker = new WorkerThread(file, xmlSourcePathDir, baseURI, 
-            		 					rdfOutpuDir, xsltPath, cacheBasePathDir, registry, cacheService, virtuosoUrl, virtuosoUser, virtuosoPass);
+    		 Runnable worker = new WorkerThread(file, converter, xmlSrcPathDir, baseURI, virtuosoStore);
              executor.execute(worker);
            }
          executor.shutdown();
@@ -96,13 +111,6 @@ public class MTConverter {
          while (!executor.isTerminated()) {}
          
          log.info("Finished all threads");
-         cacheService.clear();
-         try {
-			cacheService.close();
-		} catch (IOException e) {
-			log.error("ERROR caused by IOException, msg:  " + e.getMessage());
-			e.printStackTrace();
-		}
 	}
 
 	public String getXmlSrcPathDir() {
@@ -111,6 +119,14 @@ public class MTConverter {
 
 	public void setXmlSrcPathDir(String xmlSrcPathDir) {
 		this.xmlSrcPathDir = xmlSrcPathDir;
+	}
+
+	public String getUrlDB() {
+		return urlDB;
+	}
+
+	public void setUrlDB(String urlDB) {
+		this.urlDB = urlDB;
 	}
 
 	public String getXsltPath() {
