@@ -26,6 +26,8 @@ public class VirtuosoStore extends RdfStore implements RdfHandler{
 	private static final String NAMED_GRAPH_IRI = "graph-uri";
 	private static final Logger log = LoggerFactory.getLogger(VirtuosoStore.class);
 	private Client client;
+	private String replacedPrefixBaseURI;
+	private String prefixBaseURI;
 	public VirtuosoStore(String serverURL, String username, String password) {
 		super(serverURL,username, password);
 		init();
@@ -42,7 +44,6 @@ public class VirtuosoStore extends RdfStore implements RdfHandler{
 
 	public boolean save(byte[] bytes, String graphUri) {
 		try {
-			graphUri = graphUri.replace("FOLDER-A", "FOLDER-X");
 			UriBuilder uriBuilder = UriBuilder.fromUri(new URI(getServerURL()));
 			graphUri = graphUri.replaceAll(" ", "_");
 			uriBuilder.queryParam(NAMED_GRAPH_IRI, graphUri);
@@ -62,6 +63,22 @@ public class VirtuosoStore extends RdfStore implements RdfHandler{
 	public boolean delete(String filename) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	public String getReplacedPrefixBaseURI() {
+		return replacedPrefixBaseURI;
+	}
+
+	public void setReplacedPrefixBaseURI(String replacedPrefixBaseURI) {
+		this.replacedPrefixBaseURI = replacedPrefixBaseURI;
+	}
+
+	public String getPrefixBaseURI() {
+		return prefixBaseURI;
+	}
+
+	public void setPrefixBaseURI(String prefixBaseURI) {
+		this.prefixBaseURI = prefixBaseURI;
 	}
 
 

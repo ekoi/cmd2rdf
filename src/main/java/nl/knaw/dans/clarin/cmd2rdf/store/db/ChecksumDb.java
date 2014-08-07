@@ -119,6 +119,24 @@ public class ChecksumDb {
         st.close();
     }    
     
+    public List<String> getRecords(ActionStatus as) {
+    	List<String> paths = new ArrayList<String>();
+    	try {
+    	
+    	switch (as) {
+	    		case NEW: paths=getNewRecords();
+	    			break;
+	    		case UPDATE: paths = getUpdatedRecords();
+			default:
+				paths = getNewOrUpdatedRecords();
+				break;
+	    	}
+    	}catch (SQLException e) {
+    		e.printStackTrace();
+    	}
+    	return paths;
+    }
+    
     public List<String> getNewRecords() throws SQLException {
     	List<String> paths = new ArrayList<String>();
     	long t = System.currentTimeMillis();

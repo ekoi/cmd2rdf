@@ -5,7 +5,6 @@ package nl.knaw.dans.clarin.cmd2rdf.mt;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.InputStream;
 
 import javax.xml.transform.OutputKeys;
@@ -15,7 +14,6 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
@@ -32,8 +30,18 @@ public class OrganisationEntityConverter implements Converter {
 
 	private static final Logger log = LoggerFactory.getLogger(OrganisationEntityConverter.class);
 	private Templates cachedXSLT;
+	private String xsltPath;
+	private String vloOrgsParam;
 	
-	public OrganisationEntityConverter(String xsltPath) {
+	public OrganisationEntityConverter() {
+	}
+	
+	public void startUp() throws ConverterException {
+		checkRequiredVariables();
+		
+		log.debug("xsltPath: " + xsltPath);
+		log.debug("vloOrgsParam: " + vloOrgsParam);
+		
 		TransformerFactory transFact = new net.sf.saxon.TransformerFactoryImpl();
 		Source xsltSource = new StreamSource(xsltPath);
 		try {
@@ -43,26 +51,31 @@ public class OrganisationEntityConverter implements Converter {
 		}
 	}
 
+	private void checkRequiredVariables() throws ConverterException {
+		if (getXsltPath() == null || getXsltPath().isEmpty())
+			throw new ConverterException("xsltPath is null or empty");
+		
+		if (getVloOrgsParam() == null || getVloOrgsParam().isEmpty())
+			throw new ConverterException("vloOrgsParam is null or empty");
+	}
+
 	public ByteArrayOutputStream transform(Object object) {
 		ByteArrayOutputStream bosInput = (ByteArrayOutputStream)object;
 		ByteArrayOutputStream bos=null;
 		try {
 			Transformer transformer = cachedXSLT.newTransformer();	
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-			transformer.setParameter("VLO-orgs", "file:/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/tmp/meertens-VLO-orgs.rdf");
+			transformer.setParameter("VLO-orgs", "file:" + getVloOrgsParam());
 			long start = System.currentTimeMillis();
-			log.debug(">>>>>>>>>>>>>> DO BOS");
 			bos=new ByteArrayOutputStream();
 			 StreamResult result=new StreamResult(bos);
-			 log.debug(">>>>>>>>>>>>>> DO xmlInput");
 			 
 			 InputStream decodedInput=new ByteArrayInputStream(bosInput.toByteArray());
 			StreamSource xmlInput = new StreamSource(decodedInput);
-			log.debug(">>>>>>>>>>>>>> DO TRANSFORM");
 			transformer.transform(xmlInput,  
 					 result);
 			long end = System.currentTimeMillis();
-			log.debug("<<<<<<<<<<<<<< TRANSFORM IS DONE");
+			log.debug("Duration of OrganisationEntityConverter: " + (end-start) + " milliseconds");
 		} catch (TransformerConfigurationException e) {
 			log.error("ERROR: TransformerConfigurationException, caused by: " + e.getCause());
 		} catch (TransformerException e) {
@@ -70,5 +83,23 @@ public class OrganisationEntityConverter implements Converter {
 		} 
 		return bos;   
 	}
+
+	public String getXsltPath() {
+		return xsltPath;
+	}
+
+	public void setXsltPath(String xsltPath) {
+		this.xsltPath = xsltPath;
+	}
+
+	public String getVloOrgsParam() {
+		return vloOrgsParam;
+	}
+
+	public void setVloOrgsParam(String vloOrgsParam) {
+		this.vloOrgsParam = vloOrgsParam;
+	}
+
+	
 
 }

@@ -24,11 +24,49 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 	public void processRecord(Jobs job)
 			throws Exception {
 		setupGlolbalConfiguration(job);
-		doProcess(job.getPrepare().actions);
+		//doProcess(job.getPrepare().actions);
 		List<Record> records = job.records;
 		Record r = records.get(0);
-		//r.filter
-		doProcess(r.actions);
+		
+		doProcessRecord(r);
+	}
+	
+	private void doProcessRecord(Record r)
+			throws ClassNotFoundException, InstantiationException,
+			IllegalAccessException, NoSuchFieldException,
+			NoSuchMethodException, InvocationTargetException {
+			String filter = r.filter;
+			List<Action> list = r.actions;
+			for (Action act : list) {
+				Class<?> clazz = Class.forName(act.clazz.name);
+				Object clazzObj = clazz.newInstance();
+				List<Property> args = act.clazz.property;
+				for (Property arg : Misc.emptyIfNull(args)) {
+					String pName = arg.name;
+					String pVal = arg.value;
+					System.out.println("pName: " + pName + "\tpVal: " + pVal);
+					Matcher m = pattern.matcher(pVal);
+					if (m.find()) {
+						String globalVar = m.group(1);
+						if (GLOBAL_VARS.containsKey(globalVar)) {
+							pVal = pVal.replace(m.group(0),
+									GLOBAL_VARS.get(globalVar));
+							System.out.println("pVal contains global, pVal: "
+									+ pVal);
+						}
+					}
+					Field f = clazz.getDeclaredField(pName);
+					f.setAccessible(true);
+					f.set(clazzObj, pVal);
+	
+				}
+				System.out.println(act.clazz.methodToExecute);
+				if (act.clazz.methodToExecute != null) {
+					Method method = clazz
+							.getDeclaredMethod(act.clazz.methodToExecute);
+					method.invoke(clazzObj);
+				}
+			}
 	}
 
 
@@ -37,7 +75,6 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			NoSuchFieldException, NoSuchMethodException,
 			InvocationTargetException {
 		for (Action act : list) {
-			System.out.println(act.clazz.name);
 			Class<?> clazz = Class.forName(act.clazz.name);
 			Object clazzObj = clazz.newInstance();
 			List<Property> args = act.clazz.property;
@@ -54,10 +91,8 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 					}
 				}
 				Field f = clazz.getDeclaredField(pName);
-				System.out.println(f.getName());
 				f.setAccessible(true);
 				f.set(clazzObj, pVal);
-				System.out.println(f.get(clazzObj));
 				
 		    }
 			System.out.println(act.clazz.methodToExecute);

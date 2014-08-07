@@ -11,7 +11,11 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
 import nl.knaw.dans.clarin.cmd2rdf.store.VirtuosoStore;
+import nl.knaw.dans.clarin.cmd2rdf.store.db.ChecksumDb;
+import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
+import nl.knaw.dans.clarin.cmd2rdf.util.CheckSum;
 import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
 import org.apache.commons.io.FileUtils;
@@ -31,7 +35,7 @@ public class MTConverter {
 	
 	private String xmlSrcPathDir;
 	private String urlDB;
-	private String dbQueryCondition;
+	private String filter;
 	private String xsltPath;
 	private String rdfOutputDir;
 	private String baseURI;
@@ -41,6 +45,9 @@ public class MTConverter {
 	private String virtuosoUrl;
 	private String virtuosoUser;
 	private String virtuosoPass;
+	private String xsltPathOrgEnt;
+	private String vloOrgsParam;
+	
 	 
 	public MTConverter(){
 	}
@@ -49,14 +56,21 @@ public class MTConverter {
 		MTConverter mtc = new MTConverter();
 		mtc.setBaseURI("http://localhost:8888/DAV");
 		mtc.setCacheBasePathDir("/Users/akmi/eko-cache-profiles");
-		mtc.setnThreads("2");
+		mtc.setnThreads("1");
 		mtc.setRdfOutputDir("/Users/akmi/eko-rdf-output");
 		mtc.setRegistry("http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/");
 		mtc.setXsltPath("/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/CMD2RDF-SVN/CMD2RDF/trunk/xsl/CMDRecord2RDF.xsl");
 		mtc.setRegistry("registry");
-		
+		mtc.setFilter(ActionStatus.NONE.name());
+		mtc.setUrlDB("/Users/akmi/eko-db-test/DB_CMD_CHECKSUM");
 		//Go to db
 		mtc.setXmlSrcPathDir("/Users/akmi/eko-xml-data");
+		mtc.setXsltPathOrgEnt("/Users/akmi/eko-xsl-data/addOrganisationEntity.xsl");
+		mtc.setVloOrgsParam("/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/tmp/meertens-VLO-orgs.rdf");
+		
+		mtc.setVirtuosoUrl("http://localhost:8000/sparql-graph-crud-auth?");
+		mtc.setVirtuosoUser("dba");
+		mtc.setVirtuosoPass("dba");
 		
 		
 		mtc.process();
@@ -74,38 +88,57 @@ public class MTConverter {
 		log.debug("baseURI: " + baseURI);
 		log.debug("nThreads: " + nThreads);
 		
-		//VirtuosoStore virtuosoStore = new VirtuosoStore("http://localhost:8000/sparql-graph-crud-auth", "dba", "dba");
-		VirtuosoStore virtuosoStore = new VirtuosoStore(virtuosoUrl, virtuosoUser, virtuosoPass);
+		
+		
 		System.out.println(cacheBasePathDir);
     	log.debug("===== Collect list of files.======");
-    	
-    	XmlToRdfConverter converter = new XmlToRdfConverter(xmlSrcPathDir, xsltPath, cacheBasePathDir, registry, baseURI);
-    	converter.startUpCacheService();
-    	
-    	Collection<File> listFiles = FileUtils.listFiles(new File(xmlSrcPathDir),new String[] {"xml"}, true);
-    	List<Map.Entry> shortedMap = Misc.shortedBySize(listFiles);
-    	
-    	List<File> lf = new ArrayList<File>();
-    	for (Map.Entry e : shortedMap) {
-    	       lf.add(new File((String) e.getKey()));
-    	}
-    	
-    	log.debug("===== Multithreading Processing " + lf.size() + " list of files.======");
+
+    	ChecksumDb cdb = new ChecksumDb(urlDB);
+    	List<String> paths = cdb.getRecords(Enum.valueOf(ActionStatus.class, filter));
+    	cdb.shutdown();
+    	log.debug("===== Multithreading Processing " + paths.size() + " list of files.======");
     	
     	
-    	execute(Integer.parseInt(nThreads), lf, converter, virtuosoStore);
+    	XmlToRdfConverter converter = new XmlToRdfConverter();
+    	converter.setXmlSrcPathDir(xmlSrcPathDir);
+    	converter.setXsltPath(xsltPath);
+    	converter.setCacheBasePathDir(cacheBasePathDir);
+    	converter.setRegistry(registry);
+    	converter.setBaseURI(baseURI);
+    	try {
+			converter.startUp();
+		} catch (ConverterException e) {
+			e.printStackTrace();
+		}
+    	OrganisationEntityConverter oeConverter = new OrganisationEntityConverter();
+    	oeConverter.setXsltPath(xsltPathOrgEnt);
+    	oeConverter.setVloOrgsParam(vloOrgsParam);
+    	try {
+			oeConverter.startUp();
+		} catch (ConverterException e) {
+			e.printStackTrace();
+		}
+    	
+		VirtuosoStore virtuosoStore = new VirtuosoStore(virtuosoUrl, virtuosoUser, virtuosoPass);
+		virtuosoStore.setReplacedPrefixBaseURI("/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-xml");
+		virtuosoStore.setPrefixBaseURI(baseURI);
+    			
+    	execute(Integer.parseInt(nThreads), paths, converter, oeConverter, virtuosoStore);
     	converter.shutDownCacheService();
     
     }
 
 	
-	private void execute(int nThreads, List<File> files, XmlToRdfConverter converter,
+	private void execute(int nThreads, List<String> paths, XmlToRdfConverter converter, OrganisationEntityConverter oeConverter,
 			 VirtuosoStore virtuosoStore) {
+		List<Converter> converters = new ArrayList<Converter>();
+		converters.add(converter);
+		converters.add(oeConverter);
 	    System.out.println(nThreads);
 		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
-		log.info("@@@ begin of execution, size: " + files.size() );
-    	 for (File file : files) {
-    		 Runnable worker = new WorkerThread(file, converter, xmlSrcPathDir, baseURI, virtuosoStore);
+		log.info("@@@ begin of execution, size: " + paths.size() );
+    	 for (String path : paths) {
+    		 Runnable worker = new WorkerThread(path, converters, virtuosoStore);
              executor.execute(worker);
            }
          executor.shutdown();
@@ -201,6 +234,30 @@ public class MTConverter {
 
 	public void setVirtuosoPass(String virtuosoPass) {
 		this.virtuosoPass = virtuosoPass;
+	}
+
+	public String getFilter() {
+		return filter;
+	}
+
+	public void setFilter(String filter) {
+		this.filter = filter;
+	}
+
+	public String getXsltPathOrgEnt() {
+		return xsltPathOrgEnt;
+	}
+
+	public void setXsltPathOrgEnt(String xsltPathOrgEnt) {
+		this.xsltPathOrgEnt = xsltPathOrgEnt;
+	}
+
+	public String getVloOrgsParam() {
+		return vloOrgsParam;
+	}
+
+	public void setVloOrgsParam(String vloOrgsParam) {
+		this.vloOrgsParam = vloOrgsParam;
 	}  
     
     

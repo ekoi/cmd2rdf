@@ -24,28 +24,32 @@ import org.slf4j.LoggerFactory;
 public class WorkerThread implements Runnable {
 
 	private static final Logger log = LoggerFactory.getLogger(WorkerThread.class);
-    private File file;
-	private String xmlSrcPathDir;
-	private String baseURI;
-	private XmlToRdfConverter converter;
+    private String path;
 	private VirtuosoStore virtuosoStore;
+	private List<Converter> converters;
 	
 
-    public WorkerThread(File file, XmlToRdfConverter converter, String xmlSrcPathDir, String baseURI
+    public WorkerThread(String path, List<Converter> converters
     					, VirtuosoStore virtuosoStore){
-        this.file = file;
-        this.converter = converter;
-        this.xmlSrcPathDir = xmlSrcPathDir;
-        this.baseURI = baseURI;
+        this.path = path;
+        this.converters = converters;
         this.virtuosoStore = virtuosoStore;
         
     }
+    
+//	public WorkerThread(String path, List<Converter> converters,
+//			VirtuosoStore virtuosoStore, boolean saveRdfFileToHd) {
+//		this.path = path;
+//		this.converters = converters;
+//		this.virtuosoStore = virtuosoStore;
+//
+//	}
 
     public void run() {
     	
     	log.debug("=== run ===");
         try {
-			processTransformation(file);
+			processTransformation(path);
 		} catch (ConverterException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -53,76 +57,69 @@ public class WorkerThread implements Runnable {
 
     }
     
-    private void processTransformation(File file) throws ConverterException {
-		//for (File file: subSets) {
-			String rdfFilename =  file.getAbsolutePath().replace(".xml", ".rdf");
-			log.debug(file.getName() + " has size of " + file.length() + " bytes (" + (file.length()/1024) + " MB).");
-			long start = System.currentTimeMillis();
-			ByteArrayOutputStream bos = converter.transform(file);
-			long endConv = System.currentTimeMillis();
-			log.info("Duration of Conversion: " + ((endConv-start)) + " milliseconds");
-			String gIri = rdfFilename.replace(xmlSrcPathDir, baseURI);
-			gIri = gIri.replace(".xml", ".rdf");
-			log.debug("===Upload to Virtuoso, Graph IRI: " + gIri + ". Size: " + bos.size());
-			if ( bos.size() > 0) {
+    private void processTransformation(String path) throws ConverterException {
+			File file = new File(path);
+			if (file.exists()) {
+				String rdfFilename =  file.getAbsolutePath().replace(".xml", ".rdf");
+				log.debug(file.getName() + " has size of " + file.length() + " bytes (" + (file.length()/1024) + " MB).");
 				
-				OrganisationEntityConverter oe = new OrganisationEntityConverter("/Users/akmi/eko-xsl-data/addOrganisationEntity.xsl");
-				ByteArrayOutputStream bosOe = oe.transform(bos);
-				if (bosOe != null) {
-					String s = file.getAbsolutePath();
-					s = s.replace(xmlSrcPathDir, "");
-					s = s.replaceAll("/", "-");
-					s = s.replace(".xml", ".rdf");
-					s = "/Users/akmi/eko-rdf-output/" + s;
-					log.debug("SAVE " + s);
-					
-					
-					try {
-						FileOutputStream fosOe = new FileOutputStream (new File(s)); 
-						bosOe.writeTo(fosOe);
-						fosOe.close();
-						bosOe.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
+				Object object = file;
+				
+				//Do conversion
+				for(Converter converter : converters) {
+					long start = System.currentTimeMillis();
+					object = converter.transform(object);
+					long endConv = System.currentTimeMillis();
+					log.info("Duration of Conversion: " + ((endConv-start)) + " milliseconds");
 				}
+				ByteArrayOutputStream bos = (ByteArrayOutputStream) object;
 				
-//				boolean b = virtuosoStore.save(bos.toByteArray(), gIri);
-//				if (!b)
-//					log.error("ERROR: unable to save " + b);
-//				else
-//					log.info(">>>>Saved to Virtuoso");
-//				} else {
-//					log.error("========= FATAL ERROR ========= bos size is null");
-				
+				//Upload to virtuoso
+				uploadRdfToVirtuosoServer(rdfFilename, bos);
+			
+			
+//				boolean validRdf = WellFormedValidator.validate(rdfOutputPath);
+//				if (!validRdf) {
+//					log.info("INVALID RDF: "+ rdfOutputPath);
+//				} 
+			} else {
+				log.error("ERROR: '" + path + "' does not exist.");
 			}
-			try {
-				String s = file.getAbsolutePath();
-				s = s.replace(xmlSrcPathDir, "");
-				s = s.replaceAll("/", "-");
-				s = s.replace(".xml", "XX.rdf");
-				s = "/Users/akmi/eko-rdf-output/" + s;
-				log.debug("SAVE " + s);
-				FileOutputStream fos = new FileOutputStream (new File(s)); 
-				bos.writeTo(fos);
-				fos.close();
-				bos.close();
-			} catch (IOException e) {
-				log.error("########### ERRROR =======");
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("SAVE Duration: " + ((System.currentTimeMillis()-endConv)) + " milliseconds");
-//			boolean validRdf = WellFormedValidator.validate(rdfOutputPath);
-//			if (!validRdf) {
-//				log.info("INVALID RDF: "+ rdfOutputPath);
-//			} 
-      
-    	//}
 
     }
+
+	private void uploadRdfToVirtuosoServer(String rdfFilename,
+			ByteArrayOutputStream bos) {
+		if ( bos.size() > 0) {
+			String gIri = rdfFilename.replace(virtuosoStore.getReplacedPrefixBaseURI(), virtuosoStore.getPrefixBaseURI());
+			gIri = gIri.replace(".xml", ".rdf");
+			log.debug("===Upload to Virtuoso, Graph IRI: " + gIri + ". Size: " + bos.size());
+			
+			boolean b = virtuosoStore.save(bos.toByteArray(), gIri);
+			if (!b)
+				log.error("ERROR: unable to save " + b);
+			else
+				log.info(">>>>Saved to Virtuoso");
+		} else {
+			log.error("========= FATAL ERROR ========= bos size is null");
+		}
+	}
+
+	private void saveRdf(String filename, ByteArrayOutputStream bos) {
+
+		log.debug("SAVE " + filename);
+
+		try {
+			FileOutputStream fosOe = new FileOutputStream(new File(filename));
+			bos.writeTo(fosOe);
+			fosOe.close();
+			bos.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
 
  
 }

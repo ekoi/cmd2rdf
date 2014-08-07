@@ -15,6 +15,16 @@ public class Record {
 	@XmlAttribute
 	String filter;
 	
+	@XmlAttribute
+	String className;
+	
+	@XmlAttribute
+	String methodToExecute;
+	
+	@XmlElementWrapper(name = "properties")
+	@XmlElement(name="property")
+	List<Property> property;
+	
 	@XmlElementWrapper(name = "actions")
 	@XmlElement(name="action")
 	List<Action> actions;
