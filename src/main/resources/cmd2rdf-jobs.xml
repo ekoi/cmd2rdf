@@ -23,8 +23,8 @@ java -Xms1024m -Xmx2048m -jar MTCmd2Rdf.jar
         <profileCacheLoc>/data/cmdi2rdf/profile-cache</profileCacheLoc>
         <xslDir>/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/CMD2RDF-SVN/CMD2RDF/trunk/xsl</xslDir>
         <urlDB>/Users/akmi/eko-db-test/DB_CMD_CHECKSUM</urlDB>
-        <virtuosoUrl>localhost:8000</virtuosoUrl>
-        <virtuosoUser>dbaxxx</virtuosoUser>
+        <virtuosoUrl>localhost:8000/я сижу в библиотеках а там никак не скинуть фотки</virtuosoUrl>
+        <virtuosoUser>dba</virtuosoUser>
         <virtuosoPass>dba</virtuosoPass>
     </config>
     <prepare>
@@ -48,10 +48,10 @@ java -Xms1024m -Xmx2048m -jar MTCmd2Rdf.jar
         </actions>
     </prepare>
     <records>
-        <record filter="NEW, UPDATE">
+        <record filter="NEW, UPDATE" >
             <actions>
                 <action name="transform">
-                    <class name="nl.knaw.dans.clarin.cmd2rdf.mt.MTConverter" methodToExecute="process">
+                    <class name="nl.knaw.dans.clarin.cmd2rdf.XmlRdfConverter" methodToExecute="process">
                         <properties>
                             <property name="urlDB">$urlDB$</property>
                             <property name="xsltPath">$homedir$/CMD2RDF-SVN/CMD2RDF/trunk/xsl/CMDRecord2RDF.xsl</property>
@@ -64,7 +64,7 @@ java -Xms1024m -Xmx2048m -jar MTCmd2Rdf.jar
                     </class>
                 </action>
                 <action>
-                    <class name="nl.knaw.dans.clarin.cmd2rdf.Xslt" methodToExecute="transform">
+                    <class name="nl.knaw.dans.clarin.cmd2rdf.OraganizationEntityConverter" methodToExecute="transform">
                         <stylesheet href="addOrganisationEntity.xsl">
                             <with-param name="VLO-orgs" file="$homedir$/tmp/meertens-VLO-orgs.rdf"/>
                         </stylesheet>
@@ -81,7 +81,7 @@ java -Xms1024m -Xmx2048m -jar MTCmd2Rdf.jar
                 </action>
             </actions>
         </record>
-        <record filter="NEW, UPDATE">
+        <record filter="DELETE">
             <actions>
                 <action>
                     <class name="nl.knaw.dans.clarin.cmd2rdf.HttpClient" methodToExecute="doDelete">
@@ -90,6 +90,45 @@ java -Xms1024m -Xmx2048m -jar MTCmd2Rdf.jar
                 </action>
             </actions>
         </record>
+        
+        
+        <!-- 
+        <record filter="NEW, UPDATE" className="nl.knaw.dans.clarin.cmd2rdf.mt.MTConverter" methodToExecute="process">
+            <properties>
+                <property name="urlDB">$urlDB$</property>
+                <property name="nThreads">10</property>
+            </properties>
+            <actions>
+                <action name="transform">
+                    <class name="nl.knaw.dans.clarin.cmd2rdf.XmlToRdfConverter">
+                        <properties>
+                            <property name="xsltPath">$homedir$/CMD2RDF-SVN/CMD2RDF/trunk/xsl/CMDRecord2RDF.xsl</property>
+                            <property name="rdfOutputDir">$homedir$/output</property>
+                            <property name="baseURI">http://localhost:8888/DAV</property>
+                            <property name="cacheBasePathDir">$homedir$/cache-profile</property>
+                            <property name="registry">http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/</property>
+                        </properties>
+                    </class>
+                </action>
+                <action>
+                    <class name="nl.knaw.dans.clarin.cmd2rdf.OrganizationEntityConverter" methodToExecute="transform">
+                        <stylesheet href="addOrganisationEntity.xsl">
+                            <with-param name="VLO-orgs" file="$homedir$/tmp/meertens-VLO-orgs.rdf"/>
+                        </stylesheet>
+                    </class>
+                </action>
+                <action>
+                    <class name="nl.knaw.dans.clarin.cmd2rdf.VirtuoseStore" methodToExecute="storeRdf">
+                        <properties>
+                            <property name="virtuosoUrl">http://localhost:8000/sparql-graph-crud-auth?</property>
+                            <property name="virtuosoUser">dba</property>
+                            <property name="virtuosoPass">dba</property>
+                        </properties>
+                    </class>
+                </action>
+            </actions>
+        </record>
+        -->
     </records>
     
     <cleanup>
