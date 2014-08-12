@@ -22,7 +22,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamSource;
 
-import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.directmemory.cache.CacheService;
@@ -38,20 +38,20 @@ public class ClarinProfileResolver implements URIResolver {
 	private String basePath;
 	private CacheService<Object, Object> cacheservice;
 	private String registry;
-	public ClarinProfileResolver(String basePath, String registry, CacheService<Object, Object> cacheservice) throws ConverterException {
+	public ClarinProfileResolver(String basePath, String registry, CacheService<Object, Object> cacheservice) throws ActionException {
 		createCacheTempIfAbsent(basePath);
 		this.registry = registry;
 		this.basePath = basePath;
 		this.cacheservice = cacheservice;
 	}
 
-	private boolean createCacheTempIfAbsent(String basePath) throws ConverterException {
+	private boolean createCacheTempIfAbsent(String basePath) throws ActionException {
 		boolean success = false;
 		File dir = new File(basePath);
 		if (!dir.exists()) {
 			success = dir.mkdir();
 			if (!success)
-				throw new ConverterException("ERROR: Cannot create cache directory '" + basePath + "'.");
+				throw new ActionException("ERROR: Cannot create cache directory '" + basePath + "'.");
 			else
 				log.info("Cache directory is created: " + basePath);
 		}
@@ -74,7 +74,7 @@ public class ClarinProfileResolver implements URIResolver {
 		}
 		log.debug("Profile URI: " + href);
 		log.debug("xsl base: " + base);
-		String filename = href.replace(registry, "");//TODO: Don't use hard coded!!!
+		String filename = href.replace(registry+"/rest/registry/profiles/", "");//TODO: Don't use hard coded!!!
 		filename = filename.replace("/xml", ".xml");
 		filename = filename.replace(":", "_");
 	    

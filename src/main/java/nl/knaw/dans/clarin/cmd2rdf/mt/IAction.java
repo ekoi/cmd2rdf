@@ -1,11 +1,13 @@
 package nl.knaw.dans.clarin.cmd2rdf.mt;
 
-import java.io.ByteArrayOutputStream;
+import java.util.List;
+import java.util.Map;
 
-import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.batch.Property;
+import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 
 public interface IAction {
-	public void startUp() throws ConverterException;
-	public ByteArrayOutputStream execute(Object object);
-	public void shutDown() throws ConverterException;
+	public void startUp(Map<String, String> vars) throws ActionException;
+	public Object execute(String path,Object object) throws ActionException;
+	public void shutDown() throws ActionException;
 }

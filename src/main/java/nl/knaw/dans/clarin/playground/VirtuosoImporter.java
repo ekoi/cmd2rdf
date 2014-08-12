@@ -71,25 +71,25 @@ public class VirtuosoImporter{
 //		}
 		
 		
-		VirtuosoClient vs = new VirtuosoClient("http://localhost:8000/sparql-graph-crud-auth", "dba", "dba");
-		try {
-			int i=0;
-			//Collection<File> listFiles = FileUtils.listFiles(new File("/Users/akmi/eko77"),new String[] {"rdf"}, true);
-			//for (File file:listFiles) {
-				//String filepath = file.getAbsolutePath().replace("/Users/akmi/eko77", "http://localhost:8890/DAV/Q" + i++);
-			byte[] bytes = FileUtils.readFileToByteArray(new File("/Users/akmi/ajinomoto.rdf"));
-			
-			boolean b = vs.save(bytes, "http://localhost:8988/DAV/X19YX/oai_beeldengeluid_nl_Expressie_1000278.rdf");
-			
-//			byte[] bytes = FileUtils.readFileToByteArray(new File("/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-rdf/oai_beeldengeluid_nl_Expressie_1000278.rdf"));
+//		VirtuosoClient vs = new VirtuosoClient("http://localhost:8000/sparql-graph-crud-auth", "dba", "dba");
+//		try {
+//			int i=0;
+//			//Collection<File> listFiles = FileUtils.listFiles(new File("/Users/akmi/eko77"),new String[] {"rdf"}, true);
+//			//for (File file:listFiles) {
+//				//String filepath = file.getAbsolutePath().replace("/Users/akmi/eko77", "http://localhost:8890/DAV/Q" + i++);
+//			byte[] bytes = FileUtils.readFileToByteArray(new File("/Users/akmi/ajinomoto.rdf"));
 //			
-//			boolean b = vs.save(bytes, "http://localhost:8890/DAV/4YYYY/oai_beeldengeluid_nl_Expressie_1000278.rdf");
-			System.out.println("\t" + b);
-			//}
-		} 
-		catch (IOException e) {
-			e.printStackTrace();
-		}  
+//			boolean b = vs.save(bytes, "http://localhost:8988/DAV/X19YX/oai_beeldengeluid_nl_Expressie_1000278.rdf");
+//			
+////			byte[] bytes = FileUtils.readFileToByteArray(new File("/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-rdf/oai_beeldengeluid_nl_Expressie_1000278.rdf"));
+////			
+////			boolean b = vs.save(bytes, "http://localhost:8890/DAV/4YYYY/oai_beeldengeluid_nl_Expressie_1000278.rdf");
+//			System.out.println("\t" + b);
+//			//}
+//		} 
+//		catch (IOException e) {
+//			e.printStackTrace();
+//		}  
 	}
 	
 }

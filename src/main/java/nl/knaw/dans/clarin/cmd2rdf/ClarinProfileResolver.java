@@ -13,7 +13,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamSource;
 
-import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -27,12 +27,12 @@ public class ClarinProfileResolver implements URIResolver {
 	private static final Logger log = LoggerFactory.getLogger(ClarinProfileResolver.class);
 	private String basePath;
 	
-	public ClarinProfileResolver(String basePath) throws ConverterException {
+	public ClarinProfileResolver(String basePath) throws ActionException {
 		File dir = new File(basePath);
 		if (!dir.exists()) {
 			boolean success = dir.mkdir();
 			if (!success)
-				throw new ConverterException("ERROR: Cannot create cache directory '" + basePath + "'.");
+				throw new ActionException("ERROR: Cannot create cache directory '" + basePath + "'.");
 			else
 				log.info("Cache directory is created: " + basePath);
 			

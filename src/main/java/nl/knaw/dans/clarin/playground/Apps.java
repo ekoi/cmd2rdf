@@ -16,7 +16,7 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
-import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 import nl.knaw.dans.clarin.cmd2rdf.mt.ClarinProfileResolver;
 
 import org.apache.commons.io.FileUtils;

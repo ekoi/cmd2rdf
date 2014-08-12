@@ -13,7 +13,7 @@ import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +65,7 @@ public class Converter {
 			log.error("ERROR: TransformerConfigurationException, caused by: " + e.getCause());
 		} catch (TransformerException e) {
 			log.error("ERROR: TransformerException, caused by: " + e.getCause());
-		} catch (ConverterException e) {
+		} catch (ActionException e) {
 			log.error("ERROR: ConverterException, caused by: " + e.getCause());
 		}    
     }     

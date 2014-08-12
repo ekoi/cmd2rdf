@@ -15,10 +15,10 @@ import javax.xml.bind.annotation.XmlValue;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Property {
 	@XmlAttribute
-	String name;
+	public String name;
 	
 	@XmlValue
-	String value;
+	public String value;
 
 	public String getValue() {
 		return value;

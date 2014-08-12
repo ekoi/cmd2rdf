@@ -1,10 +1,11 @@
 package nl.knaw.dans.clarin.cmd2rdf.mt;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
@@ -12,15 +13,19 @@ import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.URIResolver;
-import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 
-import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.batch.Property;
+import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
+import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
 import org.apache.directmemory.DirectMemory;
 import org.apache.directmemory.cache.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Node;
 /**
  * @author Eko Indarto
  *
@@ -39,22 +44,15 @@ public class XsltTransformer implements IAction{
 	private String xsltSource;
 	private String profilesCacheDir;
 	private String registry;
-	private String baseStripParam;
-	private Object baseURIParam;
-	
-	
+	private Map<String, String> params;
+		
 	public XsltTransformer(){
 		
 	}
 	
-	public void startUp() throws ConverterException{
-		log.debug("XmlToRdfConverter variables: ");
-		log.debug("xsltSource: " + xsltSource);
-		log.debug("profilesCacheDir: " + profilesCacheDir);
-		log.debug("registry: " + registry);
-		log.debug("baseStripParam: " + baseStripParam);
-		log.debug("baseURIParam: " + baseURIParam);
-		log.debug("Start XmlToRdfConverter....");
+	public void startUp(Map<String, String> vars)
+			throws ActionException {
+		this.params = vars;
 		checkRequiredVariables();
 		startUpCacheService();
 		TransformerFactory transFact = new net.sf.saxon.TransformerFactoryImpl();
@@ -66,18 +64,16 @@ public class XsltTransformer implements IAction{
 		}
 	}
 
-	private void checkRequiredVariables() throws ConverterException {
+	private void checkRequiredVariables() throws ActionException {
+		this.xsltSource = params.get("xsltSource");
+		this.profilesCacheDir = params.get("profilesCacheDir");
+		this.registry = params.get("registry");
 		if (xsltSource == null || xsltSource.isEmpty())
-			throw new ConverterException("xsltPath is null or empty");
-		
+			throw new ActionException("xsltSource is null or empty");
 		if (profilesCacheDir == null || profilesCacheDir.isEmpty())
-			throw new ConverterException("cacheBasePathDir is null or empty");
-		
+			throw new ActionException("profilesCacheDir is null or empty");
 		if (registry == null || registry.isEmpty())
-			throw new ConverterException("registry is null or empty");
-		
-//		if (baseURI == null || baseURI.isEmpty())
-//			throw new ConverterException("baseURI is null or empty");
+			throw new ActionException("registry is null or empty");
 	}
 	
 	private void startUpCacheService() {
@@ -89,34 +85,43 @@ public class XsltTransformer implements IAction{
 			    .newCacheService();
 	}
 	
-	public ByteArrayOutputStream execute(Object o) {
-		File file = (File)o;
-		ByteArrayOutputStream bos=null;
+	public Object execute(String p,Object o) throws ActionException {
+		Source input = null;
+		DOMResult output = null;
+		// prepare input
+		if (o instanceof File) {
+			File file = (File)o;
+			input = new StreamSource(file);
+		} else if (o instanceof Node) {
+			Node node = (Node)o;
+			input = new DOMSource(node);
+		} else
+			throw new ActionException("Unknown input ("+p+", "+o+")");
 		try {
 			//log.debug("Converting '" + file.getAbsolutePath() + "' with base is '" + baseURI + "'" );
 			URIResolver resolver = (URIResolver) new ClarinProfileResolver(profilesCacheDir, registry, cacheService);
 			Transformer transformer = cachedXSLT.newTransformer();	
 			transformer.setURIResolver(resolver);
-			transformer.setParameter("base_strip", "file:" + baseStripParam);
-			transformer.setParameter("base_add", baseURIParam);
+			// set parameters
+			for (String param : params.keySet()) {
+				transformer.setParameter(param, params.get(param));
+			}
 			//transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 			long start = System.currentTimeMillis();
-			bos=new ByteArrayOutputStream();
-			StreamResult result=new StreamResult(bos);
-			StreamSource xmlInput = new StreamSource(file);
-			transformer.transform(xmlInput,  
-					 result);
+			output = new DOMResult();
+			transformer.transform(input,  
+					 output);
 			long end = System.currentTimeMillis();
-			log.info("Duration of transformation of " + file.getAbsolutePath() + " : " + ((end-start)) + " milliseconds");
+			log.info("Duration of transformation " + ((end-start)) + " milliseconds");
 			
 		} catch (TransformerConfigurationException e) {
 			log.error("ERROR: TransformerConfigurationException, caused by: " + e.getCause());
 		} catch (TransformerException e) {
 			log.error("ERROR: TransformerException, caused by: " + e.getCause());
-		} catch (ConverterException e) {
+		} catch (ActionException e) {
 			log.error("ERROR: ConverterException, caused by: " + e.getCause());
 		} 
-		return bos;    
+		return output.getNode();    
     }     
 	
 	public void shutDownCacheService() {
@@ -129,7 +134,8 @@ public class XsltTransformer implements IAction{
 		}
 	}
 
-	public void shutDown() throws ConverterException {
+	public void shutDown() throws ActionException {
 		shutDownCacheService();
 	}
+
 }  

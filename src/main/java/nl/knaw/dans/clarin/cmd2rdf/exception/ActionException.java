@@ -7,9 +7,9 @@ package nl.knaw.dans.clarin.cmd2rdf.exception;
  * @author akmi
  *
  */
-public class ConverterException extends Exception {
+public class ActionException extends Exception {
 
-	public ConverterException(String message) {
+	public ActionException(String message) {
 		super(message);
 	}
 

@@ -4,9 +4,7 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +14,8 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
+import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
 import nl.knaw.dans.clarin.cmd2rdf.mt.WorkerThread;
 import nl.knaw.dans.clarin.cmd2rdf.store.db.ChecksumDb;
 import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
@@ -70,15 +70,16 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 					InstantiationException, IllegalAccessException,
 					NoSuchFieldException, NoSuchMethodException,
 					InvocationTargetException {
-	for (Action act : list) {
-		executeActionObject(act);
+//	TODO: each prepare IAction also goes through the startUp, execute and shutDown sequence 
+//	for (Action act : list) {
+//		IAction startUpAction(act);
+//	}
 	}
-}
 	
 	private void doProcessRecord(Record r)
 			throws ClassNotFoundException, InstantiationException,
 			IllegalAccessException, NoSuchFieldException,
-			NoSuchMethodException, InvocationTargetException {
+			NoSuchMethodException, InvocationTargetException, ActionException {
 			
 			List<String> paths = null;
 			if (r.xmlSource.contains("urlDB")) {
@@ -88,26 +89,29 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		    	cdb.shutdown();
 			}
 			
-			List<Object> objects = new ArrayList<Object>();
+			List<IAction> actions = new ArrayList<IAction>();
 			List<Action> list = r.actions;
 			for (Action act : list) {
 				System.out.println(act.clazz.name);
-				Object clazzObj = executeActionObject(act);
-				
-				objects.add(clazzObj);
+				IAction clazzAction = startUpAction(act);				
+				actions.add(clazzAction);
 			}
 			
 			ExecutorService executor = Executors.newFixedThreadPool(r.nThreads);
 			log.info("@@@ begin of execution, size: " + paths.size() );
 	    	for (String path : paths) {
-	    		 Runnable worker = new WorkerThread(path, objects);
+	    		 Runnable worker = new WorkerThread(path, actions);
 	             executor.execute(worker);
 	        }
-	         executor.shutdown();
+			executor.shutdown();
+			 
+			while (!executor.isTerminated()) {}
+			 
+			log.info("Finished all threads");
 	         
-	         while (!executor.isTerminated()) {}
-	         
-	         log.info("Finished all threads");
+			for(IAction action : actions) {
+				action.shutDown();
+			}
 			
 	}
 	
@@ -115,35 +119,19 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 				throws ClassNotFoundException, InstantiationException, 
 					IllegalAccessException, NoSuchFieldException, 
 					NoSuchMethodException, InvocationTargetException {
-		for (Action act : actions) {
-			executeActionObject(act);
-		}
+		
 	}
 
-	private Object executeActionObject(Action act)
+	
+	private IAction startUpAction(Action act)
 			throws ClassNotFoundException, InstantiationException,
 			IllegalAccessException, NoSuchFieldException,
-			NoSuchMethodException, InvocationTargetException {
-		Class<?> clazz = Class.forName(act.clazz.name);
-		Object clazzObj = clazz.newInstance();
-		
-		List<Property> args = act.clazz.property;
-		for (Property arg : Misc.emptyIfNull(args)) {
-			String pName = arg.name;
-			String pVal = arg.value;
-			System.out.println("pName: " + pName + "\tpVal: " + pVal);
-			pVal = subtituteGlobalValue(pVal);
-			Field f = clazz.getDeclaredField(pName);
-			f.setAccessible(true);
-			f.set(clazzObj, pVal);				
-		}
-		
-		if (act.clazz.methodToExecute != null) {
-			Method method = clazz
-					.getDeclaredMethod(act.clazz.methodToExecute);
-			method.invoke(clazzObj);
-		}
-		return clazzObj;
+			NoSuchMethodException, InvocationTargetException, ActionException {
+		@SuppressWarnings("unchecked")
+		Class<IAction> clazz = (Class<IAction>) Class.forName(act.clazz.name);
+		IAction clazzAction = clazz.newInstance();
+		clazzAction.startUp(Misc.mergeVariables(JobProcessor.GLOBAL_VARS,act.clazz.property));
+		return clazzAction;
 	}
 
 	private String subtituteGlobalValue(String pVal) {

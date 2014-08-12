@@ -20,6 +20,8 @@ public class Config {
 	String rdfStoreServerURL;
 	String rdfStoreUsername;
 	String rdfStorePass;
+	String profilesCacheDir;
+	String registry;
 	public String getVersion() {
 		return version;
 	}
@@ -46,5 +48,11 @@ public class Config {
 	}
 	public String getRdfStorePass() {
 		return rdfStorePass;
+	}
+	public String getProfilesCacheDir() {
+		return profilesCacheDir;
+	}
+	public String getRegistry() {
+		return registry;
 	}
 }
