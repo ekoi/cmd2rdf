@@ -17,7 +17,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import nl.knaw.dans.clarin.cmd2rdf.exception.ImportException;
-import nl.knaw.dans.clarin.cmd2rdf.store.VirtuosoStore;
+import nl.knaw.dans.clarin.cmd2rdf.store.VirtuosoClient;
 
 import org.apache.commons.io.FileUtils;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
@@ -71,7 +71,7 @@ public class VirtuosoImporter{
 //		}
 		
 		
-		VirtuosoStore vs = new VirtuosoStore("http://localhost:8000/sparql-graph-crud-auth", "dba", "dba");
+		VirtuosoClient vs = new VirtuosoClient("http://localhost:8000/sparql-graph-crud-auth", "dba", "dba");
 		try {
 			int i=0;
 			//Collection<File> listFiles = FileUtils.listFiles(new File("/Users/akmi/eko77"),new String[] {"rdf"}, true);

@@ -10,6 +10,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class Jobs {
 	private Config config;
 	private Prepare prepare;
+	private Cleanup cleanup;
 	@XmlElementWrapper(name = "records")
 	@XmlElement(name="record")
 	List<Record> records;
@@ -25,5 +26,11 @@ public class Jobs {
 	}
 	public void setPrepare(Prepare prepare) {
 		this.prepare = prepare;
+	}
+	public Cleanup getCleanup() {
+		return cleanup;
+	}
+	public void setCleanup(Cleanup cleanup) {
+		this.cleanup = cleanup;
 	}
 }

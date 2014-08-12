@@ -3,6 +3,7 @@
  */
 package nl.knaw.dans.clarin.cmd2rdf.store;
 
+import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -14,6 +15,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
+import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
+
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,29 +26,44 @@ import org.slf4j.LoggerFactory;
  * @author Eko Indarto
  *
  */
-public class VirtuosoStore extends RdfStore implements RdfHandler{
+public class VirtuosoClient extends RdfStore implements RdfHandler, IAction{
 	private static final String NAMED_GRAPH_IRI = "graph-uri";
-	private static final Logger log = LoggerFactory.getLogger(VirtuosoStore.class);
+	private static final Logger log = LoggerFactory.getLogger(VirtuosoClient.class);
 	private Client client;
 	private String replacedPrefixBaseURI;
 	private String prefixBaseURI;
-	public VirtuosoStore(String serverURL, String username, String password) {
+	protected static String serverURL;
+	protected static String username;
+	protected static String password;
+	public VirtuosoClient(){
+		//super(getVirtuosoUrl(), getVirtuosoUser(), getVirtuosoPass());
+		super(serverURL, username, password);
+	}
+	public VirtuosoClient(String serverURL, String username, String password) {
 		super(serverURL,username, password);
-		init();
+		startUp();
 	}
 
-	private void init() {
+	public void startUp() {
+		log.debug("VirtuosoClient variables: ");
+		log.debug("replacedPrefixBaseURI: " + replacedPrefixBaseURI);
+		log.debug("prefixBaseURI: " + prefixBaseURI);
+		log.debug("serverURL: " + serverURL);
+		log.debug("username: " + username);
+		log.debug("password: " + password);
+		log.debug("Start VirtuosoClient....");
+		
 //		ClientConfig clientConfig = new ClientConfig();
 //		clientConfig.connectorProvider(new ApacheConnectorProvider());
 //		client = ClientBuilder.newClient(clientConfig);
 		client = ClientBuilder.newClient();
-		HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.digest(getUsername(), getPassword());
+		HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.digest(username, password);
 		client.register(authFeature);
 	}
 
 	public boolean save(byte[] bytes, String graphUri) {
 		try {
-			UriBuilder uriBuilder = UriBuilder.fromUri(new URI(getServerURL()));
+			UriBuilder uriBuilder = UriBuilder.fromUri(new URI(serverURL));
 			graphUri = graphUri.replaceAll(" ", "_");
 			uriBuilder.queryParam(NAMED_GRAPH_IRI, graphUri);
 			WebTarget target = client.target(uriBuilder.build());
@@ -80,6 +99,15 @@ public class VirtuosoStore extends RdfStore implements RdfHandler{
 	public void setPrefixBaseURI(String prefixBaseURI) {
 		this.prefixBaseURI = prefixBaseURI;
 	}
+	public ByteArrayOutputStream execute(Object object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	public void shutDown() throws ConverterException {
+		// TODO Auto-generated method stub
+		
+	}
+	
 
 
 }

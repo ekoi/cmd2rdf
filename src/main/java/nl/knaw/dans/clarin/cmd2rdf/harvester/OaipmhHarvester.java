@@ -3,6 +3,7 @@
  */
 package nl.knaw.dans.clarin.cmd2rdf.harvester;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -28,9 +29,9 @@ import se.kb.oai.pmh.ResumptionToken;
 public class OaipmhHarvester {
 	private static final Logger log = LoggerFactory.getLogger(OaipmhHarvester.class);
 	private static boolean asRoot = true;
-	private static final String PREFIFX = "oai_rdf";
-	private static final String SET = "meertens:VLO-orgs";
-	private String baseUrl;
+	private String oaipmhBaseURL;
+	private String prefix;
+	private String set;
 	private String outputFile;
 	/**
 	 * @param args
@@ -39,20 +40,34 @@ public class OaipmhHarvester {
 	 */
 	public void harvest(){
 		log.debug("OaipmhHarvester variables: ");
-		log.debug("baseUrl: " + baseUrl);
+		log.debug("baseUrl: " + oaipmhBaseURL);
+		log.debug("prefix: " + prefix);
+		log.debug("set: " + set);
 		log.debug("outputFile: " + outputFile);
-		log.debug("Harvesting process.");
+		log.debug("Start Harvesting....");
+		
+		File file = new File(outputFile);
+		if (file.exists()) {
+			log.debug(outputFile + "is exists.");
+			log.debug("Deleting file...");
+			boolean ok = file.delete();
+			if (ok)
+				log.debug(outputFile + " is deleted.");
+			else
+				log.error("Cannot delete the " + outputFile + " file.");
+		}
+		
 		Document doc = DocumentFactory.getInstance()
 				.createDocument();
 		Element rootElement = null;
-		OaiPmhServer server = new OaiPmhServer(baseUrl);
-		log.debug("baseUrl: " + baseUrl);
-		log.debug("prefix: " + PREFIFX);
-		log.debug("SET: " + SET);
+		OaiPmhServer server = new OaiPmhServer(oaipmhBaseURL);
+		log.debug("baseUrl: " + oaipmhBaseURL);
+		log.debug("prefix: " + prefix);
+		log.debug("SET: " + set);
 		try {
 			RecordsList records = server.listRecords(
-					PREFIFX, null, null,
-					SET);
+					prefix, null, null,
+					set);
 			boolean more = true;
 			while (more) {
 				for (Record record : records.asList()) {
@@ -64,24 +79,30 @@ public class OaipmhHarvester {
 							if (asRoot){
 								rootElement = node.getParent();
 								boolean b = rootElement.remove(node);
-								rootElement = rootElement.createCopy();
-								asRoot = false;
+								if (b) {
+									rootElement = rootElement.createCopy();
+									asRoot = false;
+								} else {
+									log.error("ERROR on harvest method.");
+								}
 							} 
 							rootElement.add(node.detach());
 						}
 					}
 				}
 				if (records.getResumptionToken() != null) {
+					log.debug("Harvest the next token.");
 					ResumptionToken rt = records.getResumptionToken();
-						//Thread.sleep(3000);
+					Thread.sleep(1000);
 					records = server.listRecords(rt);
 				} else {
 					more = false;
 				}
 			}
-			
+			log.debug("Harvesting is finish.");
 		} catch (OAIException e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		doc.add(rootElement);
@@ -98,17 +119,4 @@ public class OaipmhHarvester {
 			e.printStackTrace();
 		}
 	}
-	public String getBaseUrl() {
-		return baseUrl;
-	}
-	public void setBaseUrl(String baseUrl) {
-		this.baseUrl = baseUrl;
-	}
-	public String getOutputFile() {
-		return outputFile;
-	}
-	public void setOutputFile(String outputFile) {
-		this.outputFile = outputFile;
-	}
-
 }

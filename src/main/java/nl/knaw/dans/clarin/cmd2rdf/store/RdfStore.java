@@ -9,19 +9,12 @@ package nl.knaw.dans.clarin.cmd2rdf.store;
  *
  */
 public abstract class RdfStore {
-	private String serverURL;
-	private int port;
-	private String path;
-	private String username;
-	private String password;
+	protected String serverURL;
+	protected String username;
+	protected String password;
 	
-	protected RdfStore(String serverURL, int port, String path, String username, String password){
-		this.serverURL = serverURL;
-		this.path = path;
-		this.port = port;
-		this.username = username;
-		this.password = password;
-	}
+	protected RdfStore(){}
+	
 	
 	protected RdfStore(String serverURL, String username, String password){
 		this.serverURL = serverURL;
@@ -35,20 +28,7 @@ public abstract class RdfStore {
 	protected void setServerURL(String serverURL) {
 		this.serverURL = serverURL;
 	}
-	public int getPort() {
-		return port;
-	}
-
-	public void setPort(int port) {
-		this.port = port;
-	}
-
-	protected String getPath() {
-		return path;
-	}
-	protected void setPath(String path) {
-		this.path = path;
-	}
+	
 	protected String getUsername() {
 		return username;
 	}

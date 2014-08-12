@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
-import nl.knaw.dans.clarin.cmd2rdf.store.VirtuosoStore;
+import nl.knaw.dans.clarin.cmd2rdf.store.VirtuosoClient;
 import nl.knaw.dans.clarin.cmd2rdf.store.db.ChecksumDb;
 import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
 import nl.knaw.dans.clarin.cmd2rdf.util.CheckSum;
@@ -99,27 +99,27 @@ public class MTConverter {
     	log.debug("===== Multithreading Processing " + paths.size() + " list of files.======");
     	
     	
-    	XmlToRdfConverter converter = new XmlToRdfConverter();
-    	converter.setXmlSrcPathDir(xmlSrcPathDir);
-    	converter.setXsltPath(xsltPath);
-    	converter.setCacheBasePathDir(cacheBasePathDir);
-    	converter.setRegistry(registry);
-    	converter.setBaseURI(baseURI);
+    	XsltTransformer converter = new XsltTransformer();
+//    	converter.setXmlSrcPathDir(xmlSrcPathDir);
+//    	converter.setXsltPath(xsltPath);
+//    	converter.setCacheBasePathDir(cacheBasePathDir);
+//    	converter.setRegistry(registry);
+//    	converter.setBaseURI(baseURI);
     	try {
 			converter.startUp();
 		} catch (ConverterException e) {
 			e.printStackTrace();
 		}
     	OrganisationEntityConverter oeConverter = new OrganisationEntityConverter();
-    	oeConverter.setXsltPath(xsltPathOrgEnt);
-    	oeConverter.setVloOrgsParam(vloOrgsParam);
+//    	oeConverter.setXsltPath(xsltPathOrgEnt);
+//    	oeConverter.setVloOrgsParam(vloOrgsParam);
     	try {
 			oeConverter.startUp();
 		} catch (ConverterException e) {
 			e.printStackTrace();
 		}
     	
-		VirtuosoStore virtuosoStore = new VirtuosoStore(virtuosoUrl, virtuosoUser, virtuosoPass);
+		VirtuosoClient virtuosoStore = new VirtuosoClient(virtuosoUrl, virtuosoUser, virtuosoPass);
 		virtuosoStore.setReplacedPrefixBaseURI("/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-xml");
 		virtuosoStore.setPrefixBaseURI(baseURI);
     			
@@ -129,9 +129,9 @@ public class MTConverter {
     }
 
 	
-	private void execute(int nThreads, List<String> paths, XmlToRdfConverter converter, OrganisationEntityConverter oeConverter,
-			 VirtuosoStore virtuosoStore) {
-		List<Converter> converters = new ArrayList<Converter>();
+	private void execute(int nThreads, List<String> paths, XsltTransformer converter, OrganisationEntityConverter oeConverter,
+			 VirtuosoClient virtuosoStore) {
+		List<IAction> converters = new ArrayList<IAction>();
 		converters.add(converter);
 		converters.add(oeConverter);
 	    System.out.println(nThreads);

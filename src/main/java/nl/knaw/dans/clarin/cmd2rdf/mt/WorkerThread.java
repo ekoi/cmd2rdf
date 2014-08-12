@@ -4,20 +4,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.transform.Source;
-import javax.xml.transform.Templates;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.URIResolver;
-import javax.xml.transform.stream.StreamSource;
-
 import nl.knaw.dans.clarin.cmd2rdf.exception.ConverterException;
-import nl.knaw.dans.clarin.cmd2rdf.store.VirtuosoStore;
-import nl.knaw.dans.clarin.cmd2rdf.util.WellFormedValidator;
+import nl.knaw.dans.clarin.cmd2rdf.store.RdfStore;
+import nl.knaw.dans.clarin.cmd2rdf.store.VirtuosoClient;
 
-import org.apache.directmemory.cache.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,16 +18,33 @@ public class WorkerThread implements Runnable {
 
 	private static final Logger log = LoggerFactory.getLogger(WorkerThread.class);
     private String path;
-	private VirtuosoStore virtuosoStore;
-	private List<Converter> converters;
+	private VirtuosoClient virtuosoStore;
+	private List<IAction> converters;
+	private List<RdfStore> stores;
+	
 	
 
-    public WorkerThread(String path, List<Converter> converters
-    					, VirtuosoStore virtuosoStore){
+    public WorkerThread(String path, List<IAction> converters
+    					, VirtuosoClient virtuosoStore){
         this.path = path;
         this.converters = converters;
         this.virtuosoStore = virtuosoStore;
         
+    }
+    
+    public WorkerThread(String path, List<Object> objects){
+    	this.path = path;
+    	List<IAction> converters = new ArrayList<IAction>();
+    	List<RdfStore> stores = new ArrayList<RdfStore>();
+    	for (Object o:objects) {
+    		if (o instanceof IAction)
+    			converters.add((IAction)o);
+    		else if (o instanceof RdfStore) 
+    			//stores.add((RdfStore)o);
+    			virtuosoStore = (VirtuosoClient)o;
+    	}
+    	this.converters = converters;
+    	this.stores = stores;
     }
     
 //	public WorkerThread(String path, List<Converter> converters,
@@ -66,15 +76,16 @@ public class WorkerThread implements Runnable {
 				Object object = file;
 				
 				//Do conversion
-				for(Converter converter : converters) {
+				for(IAction converter : converters) {
 					long start = System.currentTimeMillis();
-					object = converter.transform(object);
+					object = converter.execute(object);
 					long endConv = System.currentTimeMillis();
 					log.info("Duration of Conversion: " + ((endConv-start)) + " milliseconds");
 				}
 				ByteArrayOutputStream bos = (ByteArrayOutputStream) object;
 				
 				//Upload to virtuoso
+				
 				uploadRdfToVirtuosoServer(rdfFilename, bos);
 			
 			

@@ -13,54 +13,38 @@ public class Config {
 	String version;
 	
 	String homedir;
-	String xslDir;
-	String xmlDir;
-	String harvestedRecordDir;
-	String rdfOutputDir;
-	String profileCacheLoc;
-	String baseUri;//TODO DELETE
+	String harvestedProfilesDir;
+	String xsltSourceDir;
+	String xmlSourceDir;
 	String urlDB;
-	String virtuosoUrl;
-	String virtuosoUser;
-	String virtuosoPass;
-	String a;
-	public String getA() {
-		return a;
-	}
+	String rdfStoreServerURL;
+	String rdfStoreUsername;
+	String rdfStorePass;
 	public String getVersion() {
 		return version;
 	}
 	public String getHomedir() {
 		return homedir;
 	}
-	public String getXslDir() {
-		return xslDir;
+	public String getHarvestedProfilesDir() {
+		return harvestedProfilesDir;
 	}
-	public String getXmlDir() {
-		return xmlDir;
+	public String getXsltSourceDir() {
+		return xsltSourceDir;
 	}
-	public String getHarvestedRecordDir() {
-		return harvestedRecordDir;
-	}
-	public String getRdfOutputDir() {
-		return rdfOutputDir;
-	}
-	public String getProfileCacheLoc() {
-		return profileCacheLoc;
-	}
-	public String getBaseUri() {
-		return baseUri;
+	public String getXmlSourceDir() {
+		return xmlSourceDir;
 	}
 	public String getUrlDB() {
 		return urlDB;
 	}
-	public String getVirtuosoUrl() {
-		return virtuosoUrl;
+	public String getRdfStoreServerURL() {
+		return rdfStoreServerURL;
 	}
-	public String getVirtuosoUser() {
-		return virtuosoUser;
+	public String getRdfStoreUsername() {
+		return rdfStoreUsername;
 	}
-	public String getVirtuosoPass() {
-		return virtuosoPass;
+	public String getRdfStorePass() {
+		return rdfStorePass;
 	}
 }

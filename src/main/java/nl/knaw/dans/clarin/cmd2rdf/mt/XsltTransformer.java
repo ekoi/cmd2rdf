@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * @author Eko Indarto
  *
  */
-public class XmlToRdfConverter implements Converter{
+public class XsltTransformer implements IAction{
     /** 
      * Simple transformation method. 
      * @param sourcePath - Absolute path to source xml file. 
@@ -33,48 +33,51 @@ public class XmlToRdfConverter implements Converter{
      * @param resultDir - Directory where you want to put resulting files. 
      */  
 	
-	private static final Logger log = LoggerFactory.getLogger(XmlToRdfConverter.class);
+	private static final Logger log = LoggerFactory.getLogger(XsltTransformer.class);
 	private static CacheService<Object, Object> cacheService;
 	private Templates cachedXSLT;
-	private String xmlSrcPathDir;
-	private String cacheBasePathDir;
+	private String xsltSource;
+	private String profilesCacheDir;
 	private String registry;
-	private String baseURI;
-	private String xsltPath;
+	private String baseStripParam;
+	private Object baseURIParam;
 	
 	
-	public XmlToRdfConverter(){
+	public XsltTransformer(){
+		
 	}
 	
 	public void startUp() throws ConverterException{
+		log.debug("XmlToRdfConverter variables: ");
+		log.debug("xsltSource: " + xsltSource);
+		log.debug("profilesCacheDir: " + profilesCacheDir);
+		log.debug("registry: " + registry);
+		log.debug("baseStripParam: " + baseStripParam);
+		log.debug("baseURIParam: " + baseURIParam);
+		log.debug("Start XmlToRdfConverter....");
 		checkRequiredVariables();
 		startUpCacheService();
-		log.debug("xsltPath: " + xsltPath);
-		log.debug("cacheBasePathDir: " + cacheBasePathDir);
 		TransformerFactory transFact = new net.sf.saxon.TransformerFactoryImpl();
-		Source xsltSource = new StreamSource(xsltPath);
+		Source src = new StreamSource(xsltSource);
 		try {
-			this.cachedXSLT = transFact.newTemplates(xsltSource);
+			this.cachedXSLT = transFact.newTemplates(src);
 		} catch (TransformerConfigurationException e) {
 			log.error("ERROR: TransformerConfigurationException, caused by: " + e.getMessage());
 		}
 	}
 
 	private void checkRequiredVariables() throws ConverterException {
-		if (xmlSrcPathDir == null || xmlSrcPathDir.isEmpty())
-			throw new ConverterException("xmlSrcPathDir is null or empty");
-		
-		if (xsltPath == null || xsltPath.isEmpty())
+		if (xsltSource == null || xsltSource.isEmpty())
 			throw new ConverterException("xsltPath is null or empty");
 		
-		if (cacheBasePathDir == null || cacheBasePathDir.isEmpty())
+		if (profilesCacheDir == null || profilesCacheDir.isEmpty())
 			throw new ConverterException("cacheBasePathDir is null or empty");
 		
 		if (registry == null || registry.isEmpty())
 			throw new ConverterException("registry is null or empty");
 		
-		if (baseURI == null || baseURI.isEmpty())
-			throw new ConverterException("baseURI is null or empty");
+//		if (baseURI == null || baseURI.isEmpty())
+//			throw new ConverterException("baseURI is null or empty");
 	}
 	
 	private void startUpCacheService() {
@@ -86,17 +89,17 @@ public class XmlToRdfConverter implements Converter{
 			    .newCacheService();
 	}
 	
-	public ByteArrayOutputStream transform(Object o) {
+	public ByteArrayOutputStream execute(Object o) {
 		File file = (File)o;
 		ByteArrayOutputStream bos=null;
 		try {
-			log.debug("Converting '" + file.getAbsolutePath() + "' with base is '" + baseURI + "'" );
-			URIResolver resolver = (URIResolver) new ClarinProfileResolver(cacheBasePathDir, registry, cacheService);
+			//log.debug("Converting '" + file.getAbsolutePath() + "' with base is '" + baseURI + "'" );
+			URIResolver resolver = (URIResolver) new ClarinProfileResolver(profilesCacheDir, registry, cacheService);
 			Transformer transformer = cachedXSLT.newTransformer();	
 			transformer.setURIResolver(resolver);
-			transformer.setParameter("base_strip", "file:" + xmlSrcPathDir);
-			transformer.setParameter("base_add", baseURI);
-			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setParameter("base_strip", "file:" + baseStripParam);
+			transformer.setParameter("base_add", baseURIParam);
+			//transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 			long start = System.currentTimeMillis();
 			bos=new ByteArrayOutputStream();
 			StreamResult result=new StreamResult(bos);
@@ -126,51 +129,7 @@ public class XmlToRdfConverter implements Converter{
 		}
 	}
 
-//	public Templates getCachedXSLT() {
-//		return cachedXSLT;
-//	}
-//
-//	public void setCachedXSLT(Templates cachedXSLT) {
-//		this.cachedXSLT = cachedXSLT;
-//	}
-
-	public String getXmlSrcPathDir() {
-		return xmlSrcPathDir;
-	}
-
-	public void setXmlSrcPathDir(String xmlSrcPathDir) {
-		this.xmlSrcPathDir = xmlSrcPathDir;
-	}
-
-	public String getCacheBasePathDir() {
-		return cacheBasePathDir;
-	}
-
-	public void setCacheBasePathDir(String cacheBasePathDir) {
-		this.cacheBasePathDir = cacheBasePathDir;
-	}
-
-	public String getRegistry() {
-		return registry;
-	}
-
-	public void setRegistry(String registry) {
-		this.registry = registry;
-	}
-
-	public String getBaseURI() {
-		return baseURI;
-	}
-
-	public void setBaseURI(String baseURI) {
-		this.baseURI = baseURI;
-	}
-
-	public String getXsltPath() {
-		return xsltPath;
-	}
-
-	public void setXsltPath(String xsltPath) {
-		this.xsltPath = xsltPath;
+	public void shutDown() throws ConverterException {
+		shutDownCacheService();
 	}
 }  

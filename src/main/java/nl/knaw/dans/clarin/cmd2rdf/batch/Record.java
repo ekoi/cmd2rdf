@@ -10,10 +10,16 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 @SuppressWarnings("restriction")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Record {
+public class Record implements Runnable{
 	
 	@XmlAttribute
 	String filter;
+	
+	@XmlAttribute
+	int nThreads;
+	
+	@XmlAttribute
+	String xmlSource;
 	
 	@XmlAttribute
 	String className;
@@ -28,5 +34,13 @@ public class Record {
 	@XmlElementWrapper(name = "actions")
 	@XmlElement(name="action")
 	List<Action> actions;
+
+	public void run() {
+		if (actions == null)
+		System.out.println("_______________ NULL NULL _______________");
+		else {
+			System.out.println("_______________ HELLO RUN _______________");
+		}
+	}
 }
 

@@ -83,6 +83,19 @@ public class ChecksumDb {
 			checkAndstore(files);
 	}
 
+	public void updateStatus(ActionStatus as) {
+		try {
+			update("UPDATE " + TABLE_NAME + " SET action=' " + as.name() + "' " 
+					+ "WHERE action = '" + ActionStatus.NEW.name() + "' " 
+							+ "OR action='" + ActionStatus.UPDATE.name() +"'");
+			conn.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		
+	}    
+	
 	private void createTable() throws SQLException {
 		//update("DROP TABLE CMD_MD5 IF EXISTS");
 		//conn.commit();
@@ -184,7 +197,7 @@ public class ChecksumDb {
     	String checksum = null;
     	long t = System.currentTimeMillis();
         Statement st = conn.createStatement();        
-        ResultSet rs = st.executeQuery("SELECT md5 FROM " + TABLE_NAME + " WHERE path = '" + path + "'");    
+        ResultSet rs = st.executeQuery("SELECT md5 FROM " + TABLE_NAME + " WHERE path = '" + path + "'");//TODO: EKO YOU MUST CHECK THIS QUERY!!!    
         for (; rs.next(); ) {
         	checksum = rs.getString("md5"); 
         }
@@ -373,7 +386,7 @@ public class ChecksumDb {
 		                    }
 	            		} else {
 	            			nSkip++;
-	            			setRecord(psUpdate, hash, path, ActionStatus.NONE);
+	            			//setRecord(psUpdate, hash, path, ActionStatus.NONE);
 	            			if (nSkip%10000==0){
 	            				 totaldatabaseprocessingtime += commitRecords(
 										psUpdate, nUpdate,
@@ -403,8 +416,8 @@ public class ChecksumDb {
             			psUpdate, nSkip, "Skipping " + nSkip%10000);
             }
             
-            update("DELETE FROM " + TABLE_NAME + " WHERE action = '" + ActionStatus.DONE.name() + "'");
-            conn.commit();
+//            update("DELETE FROM " + TABLE_NAME + " WHERE action = '" + ActionStatus.DONE.name() + "'");
+//            conn.commit();
             writeLog(t, nRecords, totalhashingtime,
 					totaldatabaseprocessingtime);
         } catch (SQLException e) {
@@ -458,7 +471,6 @@ public class ChecksumDb {
 
 	public static long getTotalDbProcessingTime() {
 		return totalDbProcessingTime;
-	}    
-
+	}
     
 }   

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
 
+import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
+
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,21 +16,22 @@ import com.twmacinta.util.MD5;
 public class ChecksumDbMain {
 	private static final Logger log = LoggerFactory.getLogger(ChecksumDbMain.class);
 	private String urlDB;
-	private String xmlSrcPathDir;
+	private String xmlSourceDir;
+	private String actionStatus;
 	public void checkDiff() {
 		log.debug("ChecksumDbMain variables: ");
 		log.debug("dbname: " + urlDB);
-		log.debug("xmlSrcPathDir: " + xmlSrcPathDir);
+		log.debug("xmlSrcPathDir: " + xmlSourceDir);
 		long l=System.currentTimeMillis();
-		log.debug("START  - generateApacheMD5Checksum(file)");
+		log.debug("START  - generateFastMD5Checksum(file)");
 
-		Collection<File> files = FileUtils.listFiles(new File(xmlSrcPathDir),new String[] {"xml"}, true);
+		Collection<File> files = FileUtils.listFiles(new File(xmlSourceDir),new String[] {"xml"}, true);
 		log.debug("Number of files: " + files.size());
 		log.debug("Listing process duration: " + (System.currentTimeMillis() -l)/1000 + " seconds.");
 		try {
 			ChecksumDb db = new ChecksumDb(urlDB);
 			
-			db.process(xmlSrcPathDir, files);
+			db.process(xmlSourceDir, files);
 				//db.checkAndstore(basefolder, listFiles);
 			int total = db.getTotalNumberOfRecords();
 				
@@ -46,13 +49,31 @@ public class ChecksumDbMain {
 			//db.printAll();
 			db.shutdown();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
+	
+	public void updateStatus() {
+		ChecksumDb db = new ChecksumDb(urlDB);
+		try {
+			int nrecs = db.getTotalNumberOfRecords();
+			log.debug("TOTAL: " + nrecs);
+			nrecs = db.getTotalNumberOfDoneRecords();
+			log.debug("Number of records with DONE status: " + nrecs);
+			db.updateStatus(Enum.valueOf(ActionStatus.class, actionStatus));
+			nrecs = db.getTotalNumberOfDoneRecords();
+			log.debug("Number of records with DONE status: " + nrecs);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		db.shutdown();
+	}
+	
+	public void cleanup(){}
 	
 	public static void main(String[] args) {
 		String dbname = ChecksumDb.DB_NAME;
@@ -67,7 +88,7 @@ public class ChecksumDbMain {
 
 		ChecksumDbMain cdbm = new ChecksumDbMain();
 		cdbm.urlDB = "/Users/akmi/eko-db-test/" + dbname;
-		cdbm.xmlSrcPathDir = basefolder;
+		cdbm.xmlSourceDir = basefolder;
 		cdbm.checkDiff();
 		
 
