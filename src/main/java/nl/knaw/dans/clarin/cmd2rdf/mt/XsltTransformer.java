@@ -2,8 +2,6 @@ package nl.knaw.dans.clarin.cmd2rdf.mt;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.xml.transform.Source;
@@ -17,9 +15,7 @@ import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 
-import nl.knaw.dans.clarin.cmd2rdf.batch.Property;
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
-import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
 import org.apache.directmemory.DirectMemory;
 import org.apache.directmemory.cache.CacheService;

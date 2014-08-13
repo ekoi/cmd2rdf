@@ -81,7 +81,9 @@ public class VirtuosoClient implements IAction{
 		HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.digest(username, password);
 		client.register(authFeature);
 	}
-
+//curl --digest --user dba:dba --verbose --url "http://example.com/sparql-graph-crud-auth?graph-uri=urn:graph:update:test:put" -T books.ttl 
+//curl --digest --user dba:dba --verbose --url "http://localhost:8000/sparql-graph-crud-auth?graph-uri=http://localhost:8880/DAV/
+	//xx/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus.rdf" -T /Users/akmi/eko77/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus.rdf	
 	public Object execute(String path, Object object) throws ActionException {
 		byte[] bytes = null;
 		// prepare input
@@ -97,23 +99,20 @@ public class VirtuosoClient implements IAction{
 				UriBuilder uriBuilder = UriBuilder.fromUri(new URI(serverURL));
 				uriBuilder.queryParam(NAMED_GRAPH_IRI, gIRI);
 				WebTarget target = client.target(uriBuilder.build());
-				Response response = target.request().post(Entity.entity(bytes, MediaType.APPLICATION_OCTET_STREAM));
+				Response response = target.request().put(Entity.entity(bytes, MediaType.APPLICATION_OCTET_STREAM));
+				//Response response = target.request().delete();
 				int status = response.getStatus();
-				log.debug("response status: " + status);
+				log.debug("Upload " + path + " to virtuoso server.\nResponse status: " + status);
 				if ((status == Response.Status.CREATED.getStatusCode()) || (status == Response.Status.OK.getStatusCode()))
 					return true;
 			} catch (TransformerConfigurationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error("ERROR: TransformerConfigurationException, caused by " + e.getMessage());
 			} catch (TransformerException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error("ERROR: TransformerException, caused by " + e.getMessage());
 			} catch (TransformerFactoryConfigurationError e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error("ERROR: TransformerFactoryConfigurationError, caused by " + e.getMessage());
 			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error("ERROR: URISyntaxException, caused by " + e.getMessage());
 			}
 			
 		} else

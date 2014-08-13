@@ -6,6 +6,10 @@ package nl.knaw.dans.clarin.cmd2rdf.harvester;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Map;
+
+import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
+import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -26,37 +30,22 @@ import se.kb.oai.pmh.ResumptionToken;
  * @author Eko Indarto
  *
  */
-public class OaipmhHarvester {
+public class OaipmhHarvester implements IAction{
 	private static final Logger log = LoggerFactory.getLogger(OaipmhHarvester.class);
 	private static boolean asRoot = true;
 	private String oaipmhBaseURL;
 	private String prefix;
 	private String set;
 	private String outputFile;
+	private Map<String, String> params;
+	
 	/**
 	 * @param args
 	 * @throws DocumentException 
 	 * @throws IOException 
 	 */
-	public void harvest(){
-		log.debug("OaipmhHarvester variables: ");
-		log.debug("baseUrl: " + oaipmhBaseURL);
-		log.debug("prefix: " + prefix);
-		log.debug("set: " + set);
-		log.debug("outputFile: " + outputFile);
-		log.debug("Start Harvesting....");
-		
-		File file = new File(outputFile);
-		if (file.exists()) {
-			log.debug(outputFile + "is exists.");
-			log.debug("Deleting file...");
-			boolean ok = file.delete();
-			if (ok)
-				log.debug(outputFile + " is deleted.");
-			else
-				log.error("Cannot delete the " + outputFile + " file.");
-		}
-		
+	private boolean harvest(){
+		boolean ok = true;
 		Document doc = DocumentFactory.getInstance()
 				.createDocument();
 		Element rootElement = null;
@@ -69,7 +58,7 @@ public class OaipmhHarvester {
 					prefix, null, null,
 					set);
 			boolean more = true;
-			while (more) {
+			while (more && ok) {
 				for (Record record : records.asList()) {
 					if (record != null) {
 						Element element = record.getMetadata();
@@ -83,7 +72,8 @@ public class OaipmhHarvester {
 									rootElement = rootElement.createCopy();
 									asRoot = false;
 								} else {
-									log.error("ERROR on harvest method.");
+									log.error("ERROR on harvesting.");
+									ok = false;
 								}
 							} 
 							rootElement.add(node.detach());
@@ -101,13 +91,62 @@ public class OaipmhHarvester {
 			}
 			log.debug("Harvesting is finish.");
 		} catch (OAIException e) {
-			e.printStackTrace();
+			log.error("ERROR: OAIException, caused by " + e.getMessage());
+			return false;
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			log.error("ERROR: InterruptedException, caused by " + e.getMessage());
+			return false;
 		}
 		doc.add(rootElement);
 		 // lets write to a file
-        XMLWriter writer;
+        ok = writeRdfDocumentToFile(doc);
+		return ok;
+	}
+	
+	public void startUp(Map<String, String> vars) throws ActionException {
+		params = vars;
+		checkRequiredVariables();
+		File file = new File(outputFile);
+		removeOutputFileOnExist(file);
+		
+	}
+	
+	public Object execute(String path, Object object) throws ActionException {
+		return harvest();
+	}
+	public void shutDown() throws ActionException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	private void checkRequiredVariables() throws ActionException {
+		this.oaipmhBaseURL = params.get("oaipmhBaseURL");
+		this.prefix = params.get("prefix");
+		this.set = params.get("set");
+		this.outputFile = params.get("outputFile");
+		
+		if (oaipmhBaseURL == null || oaipmhBaseURL.isEmpty())
+			throw new ActionException("xsltSource is null or empty");
+		if (prefix == null || prefix.isEmpty())
+			throw new ActionException("profilesCacheDir is null or empty");
+		if (set == null || set.isEmpty())
+			throw new ActionException("outputFile is null or empty");
+		if (outputFile == null || outputFile.isEmpty())
+			throw new ActionException("outputFile is null or empty");
+	}
+	private void removeOutputFileOnExist(File file) {
+		if (file.exists()) {
+			log.debug(outputFile + "is exists.");
+			log.debug("Deleting file...");
+			boolean ok = file.delete();
+			if (ok)
+				log.debug(outputFile + " is deleted.");
+			else
+				log.error("Cannot delete the " + outputFile + " file.");
+		}
+	}
+	private boolean writeRdfDocumentToFile(Document doc) {
+		XMLWriter writer;
 		try {
 			writer = new XMLWriter(
 			    new FileWriter( outputFile )
@@ -116,7 +155,9 @@ public class OaipmhHarvester {
 			writer.write( doc );
 			 writer.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("ERROR: IOException, caused by " + e.getMessage());
+			return false;
 		}
+		return true;
 	}
 }

@@ -36,7 +36,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		doPrepare(job.getPrepare().actions);
 		doProcessRecord(job.records.get(0));
 		
-		doCleanup(job.getCleanup().actions);
+		//doCleanup(job.getCleanup().actions);
 	}
 	private void setupGlolbalConfiguration(Jobs job)
 			throws IntrospectionException, 
@@ -69,11 +69,19 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			throws ClassNotFoundException,
 					InstantiationException, IllegalAccessException,
 					NoSuchFieldException, NoSuchMethodException,
-					InvocationTargetException {
-//	TODO: each prepare IAction also goes through the startUp, execute and shutDown sequence 
-//	for (Action act : list) {
-//		IAction startUpAction(act);
-//	}
+					InvocationTargetException, ActionException {
+		List<IAction> actions = new ArrayList<IAction>();
+		for (Action act : list) {
+			System.out.println(act.clazz.name);
+			IAction clazzAction = startUpAction(act);				
+			actions.add(clazzAction);
+		}
+		for(IAction action : actions) {
+			action.execute(null,null);
+		}
+		for(IAction action : actions) {
+			action.shutDown();
+		}
 	}
 	
 	private void doProcessRecord(Record r)
@@ -115,11 +123,22 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			
 	}
 	
-	private void doCleanup(List<Action> actions) 
+	private void doCleanup(List<Action> list) 
 				throws ClassNotFoundException, InstantiationException, 
 					IllegalAccessException, NoSuchFieldException, 
-					NoSuchMethodException, InvocationTargetException {
-		
+					NoSuchMethodException, InvocationTargetException, ActionException {
+		List<IAction> actions = new ArrayList<IAction>();
+		for (Action act : list) {
+			System.out.println(act.clazz.name);
+			IAction clazzAction = startUpAction(act);				
+			actions.add(clazzAction);
+		}
+		for(IAction action : actions) {
+			action.execute(null,null);
+		}
+		for(IAction action : actions) {
+			action.shutDown();
+		}
 	}
 
 	
