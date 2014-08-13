@@ -43,12 +43,10 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 					IllegalAccessException,
 					InvocationTargetException {
 		Config c = job.getConfig();
-		BeanInfo beanInfo = Introspector.getBeanInfo(Config.class);
-		for (PropertyDescriptor propertyDesc : beanInfo.getPropertyDescriptors()) {
-		    String propertyName = propertyDesc.getName();
-		    Object value = propertyDesc.getReadMethod().invoke(c);
-		    System.out.println(propertyName + "\t" + value);
-		    GLOBAL_VARS.put(propertyName, String.valueOf(value));
+		List<Property> props = c.property;
+		for (Property prop:props) {
+			System.out.println(prop.name + "\t" + prop.value);
+			GLOBAL_VARS.put(prop.name, prop.value);
 		}
 		//iterate through map, find whether map values contain {val}
 		for (Map.Entry<String, String> e : GLOBAL_VARS.entrySet()) {
@@ -93,7 +91,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			if (r.xmlSource.contains("urlDB")) {
 				String urlDB = subtituteGlobalValue(r.xmlSource);
 				ChecksumDb cdb = new ChecksumDb(urlDB);
-		    	paths = cdb.getRecords(Enum.valueOf(ActionStatus.class, r.filter));
+		    	paths = cdb.getRecords(Misc.convertToActionStatus(r.filter));
 		    	cdb.shutdown();
 			}
 			

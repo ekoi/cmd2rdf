@@ -18,8 +18,6 @@ public class Clazz {
 	@XmlAttribute
 	String name;
 	
-	@XmlAttribute
-	String methodToExecute;
 	
 	@XmlElementWrapper(name = "properties")
 	@XmlElement(name="property")

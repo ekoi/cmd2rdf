@@ -1,8 +1,12 @@
 package nl.knaw.dans.clarin.cmd2rdf.batch;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 
 @SuppressWarnings("restriction")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -12,47 +16,7 @@ public class Config {
 	@XmlAttribute
 	String version;
 	
-	String homedir;
-	String harvestedProfilesDir;
-	String xsltSourceDir;
-	String xmlSourceDir;
-	String urlDB;
-	String rdfStoreServerURL;
-	String rdfStoreUsername;
-	String rdfStorePass;
-	String profilesCacheDir;
-	String registry;
-	public String getVersion() {
-		return version;
-	}
-	public String getHomedir() {
-		return homedir;
-	}
-	public String getHarvestedProfilesDir() {
-		return harvestedProfilesDir;
-	}
-	public String getXsltSourceDir() {
-		return xsltSourceDir;
-	}
-	public String getXmlSourceDir() {
-		return xmlSourceDir;
-	}
-	public String getUrlDB() {
-		return urlDB;
-	}
-	public String getRdfStoreServerURL() {
-		return rdfStoreServerURL;
-	}
-	public String getRdfStoreUsername() {
-		return rdfStoreUsername;
-	}
-	public String getRdfStorePass() {
-		return rdfStorePass;
-	}
-	public String getProfilesCacheDir() {
-		return profilesCacheDir;
-	}
-	public String getRegistry() {
-		return registry;
-	}
+	@XmlElementWrapper(name = "properties")
+	@XmlElement(name="property")
+	List<Property> property;
 }

@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import nl.knaw.dans.clarin.cmd2rdf.batch.Property;
+import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,31 +27,6 @@ import org.slf4j.LoggerFactory;
 public class Misc {
 	private static final Logger log = LoggerFactory.getLogger(Misc.class);
 	private final static Pattern pattern = Pattern.compile("\\{(.*?)\\}");
-	public static List<Map.Entry> shortedBySize(Collection<File> listFiles) {
-		log.debug("===== Processing " + listFiles.size() + " xml files.======");
-    	Map<String, Long> map = new HashMap<String, Long>();
-    	log.debug("===== Put in maps.======");
-    	for (File f:listFiles) {
-    		map.put(f.getAbsolutePath(), f.length());
-    				
-    	}
-    	log.debug("===== Sorted by values.======");
-    	List<Map.Entry> shortedMap = new ArrayList<Map.Entry>(map.entrySet());
-    	Collections.sort(shortedMap,
-    	         new Comparator() {
-    	             public int compare(Object o1, Object o2) {
-    	                 Map.Entry e1 = (Map.Entry) o1;
-    	                 Map.Entry e2 = (Map.Entry) o2;
-    	                 return ((Comparable) e2.getValue()).compareTo(e1.getValue());
-    	             }
-    	         });
-    	log.debug("===== Size of shorted map: " + shortedMap.size());
-		return shortedMap;
-	}
-	
-	public static List safe( List other ) {
-	    return other == null ? Collections.EMPTY_LIST : other;
-	}
 	
 	public static <T> Iterable<T> emptyIfNull(Iterable<T> iterable) {
 	    return iterable == null ? Collections.<T>emptyList() : iterable;
@@ -63,7 +39,7 @@ public class Misc {
 			if (globalVars.containsKey(globalVar)) {
 				pVal = pVal.replace(m.group(0),
 						globalVars.get(globalVar));
-				System.out.println("pVal contains global, pVal: "
+				log.debug("pVal contains global, pVal: "
 						+ pVal);
 			}
 		}
@@ -82,4 +58,25 @@ public class Misc {
 		return vars;
 	}
 
+	public static ActionStatus convertToActionStatus(String words)
+			throws ActionException {
+		String[] w = words.trim().split(" ");
+		int len = w.length;
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < len; i++) {
+			if (w[i].length() > 0) {
+				sb.append(w[i]);
+				if (i < len - 1)
+					sb.append("_");
+			}
+		}
+		try {
+			ActionStatus s = Enum.valueOf(ActionStatus.class, sb.toString());
+			return s;
+		} catch (IllegalArgumentException e) {
+			throw new ActionException(
+					"ERROR: IllegalArgumentException, no enum constant of '"
+							+ words + "'.");
+		}
+	}
 }

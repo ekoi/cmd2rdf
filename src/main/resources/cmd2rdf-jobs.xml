@@ -1,24 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CMD2RDF>
     <config version="1.0">
-        <!-- some general config:
-      - path to the harvested records
-      - base-uri of the component registry
-      - nr of threads
-      - output directory
-      - Virtuoso or even a general endpoint that supports the Graph Store HTTP protocol (http://www.w3.org/TR/sparql11-http-rdf-update/)
-      - ...
-    -->
-        <homedir>/Users/akmi/eko-cmdi-test</homedir>
-        <harvestedProfilesDir>{homedir}/harvester</harvestedProfilesDir>
-        <xsltSourceDir>{homedir}/xsl</xsltSourceDir>
-        <xmlSourceDir>{homedir}/xml-data</xmlSourceDir>
-        <urlDB>{homedir}/db/DB_CMD_CHECKSUM</urlDB>
-        <profilesCacheDir>{homedir}/profiles-cache</profilesCacheDir>
-        <registry>http://catalog.clarin.eu/ds/ComponentRegistry</registry>
-        <rdfStoreServerURL>localhost:8000/sparql-graph-crud-auth?</rdfStoreServerURL>
-        <rdfStoreUsername>dba</rdfStoreUsername>
-        <rdfStorePass>dba</rdfStorePass>
+        <properties>
+            <property name="homedir">/Users/akmi/eko-cmdi-test</property>
+            <property name="harvestedProfilesDir">{homedir}/harvester</property>
+            <property name="xsltSourceDir">{homedir}/xsl</property>
+            <property name="xmlSourceDir">{homedir}/xml-data</property>
+            <property name="urlDB">{homedir}/db/DB_CMD_CHECKSUM</property>
+            <property name="profilesCacheDir">{homedir}/profiles-cache</property>
+            <property name="registry">http://catalog.clarin.eu/ds/ComponentRegistry</property>
+            <property name="rdfStoreServerURL">localhost:8000/sparql-graph-crud-auth?</property>
+            <property name="rdfStoreUsername">dba</property>
+            <property name="rdfStorePass">dba</property>
+        </properties>
     </config>
     <prepare>
         <actions>

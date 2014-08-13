@@ -140,6 +140,9 @@ public class ChecksumDb {
 	    		case NEW: paths=getNewRecords();
 	    			break;
 	    		case UPDATE: paths = getUpdatedRecords();
+	    			break;
+	    		case NEW_UPDATE: paths = getNewOrUpdatedRecords();
+	    			break;
 			default:
 				paths = getNewOrUpdatedRecords();
 				break;
