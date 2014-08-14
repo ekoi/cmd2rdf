@@ -1,11 +1,9 @@
 package nl.knaw.dans.clarin.cmd2rdf.store.db;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,12 +24,12 @@ import com.twmacinta.util.MD5;
 
 public class ChecksumDb {
 	private static final String TABLE_NAME = "CMD_MD5";
-	private static final String UPDATE_PREPARED_STATEMENT = "UPDATE " + TABLE_NAME + " SET md5 = ?, action=? WHERE path = ?";
-	private static final String SKIP_PREPARED_STATEMENT = "UPDATE " + TABLE_NAME + " SET action=? WHERE path = ?";
-	private static final String INSERT_PREPARED_STATEMENT = "INSERT INTO " + TABLE_NAME + "(path, md5, action) VALUES(?,?,?)";
-	private static final String NEW_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.NEW + "'";
-	private static final String UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.UPDATE + "'";
-	private static final String NEW_OR_UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.NEW + "' OR action ='" + ActionStatus.UPDATE + "'";
+	private static final String UPDATE_PREPARED_STATEMENT = "UPDATE " + TABLE_NAME + " SET md5 = ?, status=? WHERE path = ?";
+	private static final String SKIP_PREPARED_STATEMENT = "UPDATE " + TABLE_NAME + " SET status=? WHERE path = ?";
+	private static final String INSERT_PREPARED_STATEMENT = "INSERT INTO " + TABLE_NAME + "(path, md5, status) VALUES(?,?,?)";
+	private static final String NEW_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.NEW + "'";
+	private static final String UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.UPDATE + "'";
+	private static final String NEW_OR_UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.NEW + "' OR status ='" + ActionStatus.UPDATE + "'";
 	
 	private static boolean initialdata = false;
 	private static long totalQueryDuration;
@@ -45,7 +43,7 @@ public class ChecksumDb {
 	public static final int COL_ACTION_MAX_LENTH = 10;
 	
 	
-    Connection conn;
+    private Connection conn;
     
     public ChecksumDb(String db_file_name_prefix){ 
     	init(db_file_name_prefix);  
@@ -86,9 +84,9 @@ public class ChecksumDb {
 
 //	public void updateStatus(ActionStatus as) {
 //		try {
-//			update("UPDATE " + TABLE_NAME + " SET action=' " + as.name() + "' " 
-//					+ "WHERE action = '" + ActionStatus.NEW.name() + "' " 
-//							+ "OR action='" + ActionStatus.UPDATE.name() +"'");
+//			update("UPDATE " + TABLE_NAME + " SET status='" + as.name() + "' " 
+//					+ "WHERE status = '" + ActionStatus.NEW.name() + "' " 
+//							+ "OR status='" + ActionStatus.UPDATE.name() +"'");
 //			conn.commit();
 //		} catch (SQLException e) {
 //			e.printStackTrace();
@@ -97,10 +95,11 @@ public class ChecksumDb {
 //		
 //	}   
 	
-	public void updateDoneStatusToDelete(ActionStatus as) {
+	public void updateStatusOfDoneStatus(ActionStatus as) {
 		try {
-			update("UPDATE " + TABLE_NAME + " SET action=' " + as.name() + "' " 
-					+ "WHERE action = '" + ActionStatus.DONE.name() + "'");
+			update("UPDATE " + TABLE_NAME + " SET status='" + as.name() + "' " 
+					+ "WHERE status = '" + ActionStatus.DONE.name() + "'");
+			conn.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -110,7 +109,7 @@ public class ChecksumDb {
 	
 	public void updateActionStatusByRecord(String path, ActionStatus as) {
 		try {
-			update("UPDATE " + TABLE_NAME + " SET action=' " + as.name() + "' " 
+			update("UPDATE " + TABLE_NAME + " SET status='" + as.name() + "' " 
 					+ "WHERE path = '" + path +"'");
 			conn.commit();
 		} catch (SQLException e) {
@@ -122,7 +121,7 @@ public class ChecksumDb {
 	
 	public void deleteActionStatus(ActionStatus as) {
 		try {
-			 update("DELETE FROM " + TABLE_NAME + " WHERE action = '" + as.name() + "'");
+			 update("DELETE FROM " + TABLE_NAME + " WHERE status ='" + as.name() + "'");
 			conn.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -138,12 +137,20 @@ public class ChecksumDb {
 		update(
                 "CREATE TABLE " + TABLE_NAME 
                 + "( id INTEGER IDENTITY, path VARCHAR(" + COL_CHECKSUM_MAX_LENGTH + ") UNIQUE, "
-                + "md5 VARCHAR(" + COL_CHECKSUM_MAX_LENGTH + "), action VARCHAR(" + COL_ACTION_MAX_LENTH + "))");
+                + "md5 VARCHAR(" + COL_CHECKSUM_MAX_LENGTH + "), status VARCHAR(" + COL_ACTION_MAX_LENTH + "))");
 		update("CREATE INDEX path_idx ON " + TABLE_NAME + "(path)");
         update("CREATE INDEX md5_idx ON " + TABLE_NAME + "(md5)");
         conn.setAutoCommit(false);
 	}
 
+    public void closeDbConnection(){
+		try {
+	        conn.close();  
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+    }
+    
     public void shutdown(){
 		try {
 			Statement st = conn.createStatement();
@@ -262,7 +269,7 @@ public class ChecksumDb {
     	int total = 0;
     	
         Statement st = conn.createStatement();        
-        ResultSet rs = st.executeQuery("SELECT count(*) AS total FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.NEW.name() + "'");    
+        ResultSet rs = st.executeQuery("SELECT count(*) AS total FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.NEW.name() + "'");    
         for (; rs.next(); ) {
         	total = rs.getInt("total"); 
         }
@@ -273,7 +280,7 @@ public class ChecksumDb {
     	int total = 0;
     	
         Statement st = conn.createStatement();        
-        ResultSet rs = st.executeQuery("SELECT count(*) AS total FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.UPDATE.name() + "'");    
+        ResultSet rs = st.executeQuery("SELECT count(*) AS total FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.UPDATE.name() + "'");    
         for (; rs.next(); ) {
         	total = rs.getInt("total"); 
         }
@@ -284,7 +291,7 @@ public class ChecksumDb {
     public int getTotalNumberOfDoneRecords() throws SQLException {
     	int total = 0;
         Statement st = conn.createStatement();        
-        ResultSet rs = st.executeQuery("SELECT count(*) AS total FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.DONE.name() + "'");    
+        ResultSet rs = st.executeQuery("SELECT count(*) AS total FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.DONE.name() + "'");    
         for (; rs.next(); ) {
         	total = rs.getInt("total"); 
         }
@@ -295,7 +302,7 @@ public class ChecksumDb {
     public int getTotalNumberOfNoneRecords() throws SQLException {
     	int total = 0;
         Statement st = conn.createStatement();        
-        ResultSet rs = st.executeQuery("SELECT count(*) AS total FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.NONE.name() + "'");    
+        ResultSet rs = st.executeQuery("SELECT count(*) AS total FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.NONE.name() + "'");    
         for (; rs.next(); ) {
         	total = rs.getInt("total"); 
         }

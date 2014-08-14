@@ -99,10 +99,10 @@ public class VirtuosoClient implements IAction{
 				UriBuilder uriBuilder = UriBuilder.fromUri(new URI(serverURL));
 				uriBuilder.queryParam(NAMED_GRAPH_IRI, gIRI);
 				WebTarget target = client.target(uriBuilder.build());
-				Response response = target.request().put(Entity.entity(bytes, MediaType.APPLICATION_OCTET_STREAM));
+				Response response = target.request().post(Entity.entity(bytes, MediaType.APPLICATION_OCTET_STREAM));
 				//Response response = target.request().delete();
 				int status = response.getStatus();
-				log.debug("Upload " + path + " to virtuoso server.\nResponse status: " + status);
+				log.debug("Upload " + (path.replace(".xml", ".rdf")) + " to virtuoso server.\nResponse status: " + status);
 				if ((status == Response.Status.CREATED.getStatusCode()) || (status == Response.Status.OK.getStatusCode()))
 					return true;
 			} catch (TransformerConfigurationException e) {

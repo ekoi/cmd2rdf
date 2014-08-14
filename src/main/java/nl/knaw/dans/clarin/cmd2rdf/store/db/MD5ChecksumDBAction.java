@@ -20,36 +20,46 @@ public class MD5ChecksumDBAction implements IAction {
 	private ChecksumDb db;
 	private String urlDB;
 	private String xmlSourceDir;
-	private String action;
-	private String status;
+	//private String action;
+	ActionStatus act;
 	
 	public void startUp(Map<String, String> vars) throws ActionException {
 		urlDB = vars.get("urlDB");
 		xmlSourceDir = vars.get("xmlSourceDir");
-		action = vars.get("action");
-		status = vars.get("status");
+		String action = vars.get("action");
 		
 		if (urlDB == null || urlDB.isEmpty())
 			throw new ActionException("urlDB is null or empty");
 		if (action == null || action.isEmpty())
 			throw new ActionException("action is null or empty");
 		db = new ChecksumDb(urlDB);
+		act = Misc.convertToActionStatus(action);
+		System.out.println("Initialize db");
 
 	}
 
 	public Object execute(String path, Object object) throws ActionException {
-		ActionStatus act = Misc.convertToActionStatus(action);
-		ActionStatus actStatus = Misc.convertToActionStatus(status);
+		
 		switch(act){
 			case CHECKSUM_DIFF: checksumDiff();
 				break;
-			case UPDATE: db.updateDoneStatusToDelete(actStatus);
+			case DELETE: updateAllDoneToDeleteStatus();
+				break;
+			case CLEANUP: deleteAllRecordsWithStatusPurge();
 				break;
 			default:
 				return null;
 		}		
 		
 		return null;
+	}
+	
+	private void deleteAllRecordsWithStatusPurge() {
+		db.deleteActionStatus(ActionStatus.PURGE);
+	}
+
+	private void updateAllDoneToDeleteStatus() {
+		db.updateStatusOfDoneStatus(ActionStatus.DELETE);
 	}
 
 	private void checksumDiff() throws ActionException {
@@ -81,7 +91,10 @@ public class MD5ChecksumDBAction implements IAction {
 	}
 
 	public void shutDown() throws ActionException {
-		db.shutdown();
+		if(act == ActionStatus.CLEANUP)
+			db.shutdown();
+		else
+			db.closeDbConnection();
 	}
 
 }

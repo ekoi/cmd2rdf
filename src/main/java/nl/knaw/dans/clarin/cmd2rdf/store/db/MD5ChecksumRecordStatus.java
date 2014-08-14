@@ -49,7 +49,7 @@ public class MD5ChecksumRecordStatus implements IAction {
 	 * @see nl.knaw.dans.clarin.cmd2rdf.mt.IAction#shutDown()
 	 */
 	public void shutDown() throws ActionException {
-		db.shutdown();
+		db.closeDbConnection();
 
 	}
 	

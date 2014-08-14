@@ -39,8 +39,7 @@
                 <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.MD5ChecksumDBAction">
                     <properties>
                         <property name="urlDB">{urlDB}</property>
-                        <property name="action">UPDATE</property>
-                        <property name="status">DELETE</property>
+                        <property name="action">DELETE</property>
                     </properties>
                 </class>
             </action>
@@ -120,8 +119,7 @@
                 <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.MD5ChecksumDBAction">
                     <properties>
                         <property name="urlDB">{urlDB}</property>
-                        <property name="action">CLEANUP</property>
-                        <property name="status">PURGE</property>
+                        <property name="action">CLEANUP </property>
                     </properties>
                 </class>
             </action>

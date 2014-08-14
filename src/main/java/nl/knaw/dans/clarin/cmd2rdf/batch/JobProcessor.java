@@ -36,7 +36,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		doPrepare(job.getPrepare().actions);
 		doProcessRecord(job.records.get(0));
 		
-		//doCleanup(job.getCleanup().actions);
+		doCleanup(job.getCleanup().actions);
 	}
 	private void setupGlolbalConfiguration(Jobs job)
 			throws IntrospectionException, 
@@ -92,7 +92,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 				String urlDB = subtituteGlobalValue(r.xmlSource);
 				ChecksumDb cdb = new ChecksumDb(urlDB);
 		    	paths = cdb.getRecords(Misc.convertToActionStatus(r.filter));
-		    	cdb.shutdown();
+		    	cdb.closeDbConnection();
 			}
 			
 			List<IAction> actions = new ArrayList<IAction>();

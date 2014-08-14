@@ -52,7 +52,7 @@ public class ChecksumDbMain {
 			log.debug("NONE: " + db.getTotalNumberOfNoneRecords());
 			
 			//db.printAll();
-			db.shutdown();
+			db.closeDbConnection();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
