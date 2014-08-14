@@ -55,24 +55,24 @@ public class ChecksumDbMain {
 		}
 	}
 	
-	public void updateStatus() {
-		ChecksumDb db = new ChecksumDb(urlDB);
-		try {
-			int nrecs = db.getTotalNumberOfRecords();
-			log.debug("TOTAL: " + nrecs);
-			nrecs = db.getTotalNumberOfDoneRecords();
-			log.debug("Number of records with DONE status: " + nrecs);
-			db.updateStatus(Enum.valueOf(ActionStatus.class, actionStatus));
-			nrecs = db.getTotalNumberOfDoneRecords();
-			log.debug("Number of records with DONE status: " + nrecs);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		db.shutdown();
-	}
-	
+//	public void updateStatus() {
+//		ChecksumDb db = new ChecksumDb(urlDB);
+//		try {
+//			int nrecs = db.getTotalNumberOfRecords();
+//			log.debug("TOTAL: " + nrecs);
+//			nrecs = db.getTotalNumberOfDoneRecords();
+//			log.debug("Number of records with DONE status: " + nrecs);
+//			db.updateStatus(Enum.valueOf(ActionStatus.class, actionStatus));
+//			nrecs = db.getTotalNumberOfDoneRecords();
+//			log.debug("Number of records with DONE status: " + nrecs);
+//		} catch (SQLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		db.shutdown();
+//	}
+//	
 	public void cleanup(){}
 	
 	public static void main(String[] args) {

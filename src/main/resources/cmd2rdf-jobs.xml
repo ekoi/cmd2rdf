@@ -17,10 +17,11 @@
     <prepare>
         <actions>
             <action name="checksum">
-                <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.DiffChecksumAction">
+                <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.MD5ChecksumDBAction">
                     <properties>
                         <property name="xmlSourceDir">{xmlSourceDir}</property>
                         <property name="urlDB">{urlDB}</property>
+                        <property name="action">CHECKSUM DIFF</property>
                     </properties>
                 </class>
             </action>
@@ -34,6 +35,15 @@
                     </properties>
                 </class>
             </action -->
+            <action>  
+                <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.MD5ChecksumDBAction">
+                    <properties>
+                        <property name="urlDB">{urlDB}</property>
+                        <property name="action">UPDATE</property>
+                        <property name="status">DELETE</property>
+                    </properties>
+                </class>
+            </action>
         </actions>
     </prepare>
     <records>
@@ -67,14 +77,15 @@
                         </properties>
                     </class>
                 </action>
-                <!--action>
-                    <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.StatusAction">
+                <action>
+                    <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.MD5ChecksumRecordStatus">
                         <properties>
                             <property name="urlDB">{urlDB}</property>
+                            <property name="action">UPDATE</property>
                             <property name="status">DONE</property>
                         </properties>
                     </class>
-                </action -->
+                </action>
             </actions>
         </record>
         <record filter="DELETE" xmlSource="$urlDB" >
@@ -92,9 +103,11 @@
                     </class>
                 </action>
                 <action>
-                    <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.DeleteAction">
+                    <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.MD5ChecksumRecordStatus">
                         <properties>
                             <property name="urlDB">{urlDB}</property>
+                            <property name="action">UPDATE</property>
+                            <property name="status">PURGE</property>
                         </properties>
                     </class>
                 </action>
@@ -104,9 +117,11 @@
     <cleanup>
         <actions>
             <action>
-                <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.CleanUpAction">
+                <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.MD5ChecksumDBAction">
                     <properties>
                         <property name="urlDB">{urlDB}</property>
+                        <property name="action">CLEANUP</property>
+                        <property name="status">PURGE</property>
                     </properties>
                 </class>
             </action>

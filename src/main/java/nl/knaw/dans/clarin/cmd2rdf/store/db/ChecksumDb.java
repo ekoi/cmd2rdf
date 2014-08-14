@@ -27,6 +27,7 @@ import com.twmacinta.util.MD5;
 public class ChecksumDb {
 	private static final String TABLE_NAME = "CMD_MD5";
 	private static final String UPDATE_PREPARED_STATEMENT = "UPDATE " + TABLE_NAME + " SET md5 = ?, action=? WHERE path = ?";
+	private static final String SKIP_PREPARED_STATEMENT = "UPDATE " + TABLE_NAME + " SET action=? WHERE path = ?";
 	private static final String INSERT_PREPARED_STATEMENT = "INSERT INTO " + TABLE_NAME + "(path, md5, action) VALUES(?,?,?)";
 	private static final String NEW_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.NEW + "'";
 	private static final String UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE action='" + ActionStatus.UPDATE + "'";
@@ -83,11 +84,45 @@ public class ChecksumDb {
 			checkAndstore(files);
 	}
 
-	public void updateStatus(ActionStatus as) {
+//	public void updateStatus(ActionStatus as) {
+//		try {
+//			update("UPDATE " + TABLE_NAME + " SET action=' " + as.name() + "' " 
+//					+ "WHERE action = '" + ActionStatus.NEW.name() + "' " 
+//							+ "OR action='" + ActionStatus.UPDATE.name() +"'");
+//			conn.commit();
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		}
+//		
+//		
+//	}   
+	
+	public void updateDoneStatusToDelete(ActionStatus as) {
 		try {
 			update("UPDATE " + TABLE_NAME + " SET action=' " + as.name() + "' " 
-					+ "WHERE action = '" + ActionStatus.NEW.name() + "' " 
-							+ "OR action='" + ActionStatus.UPDATE.name() +"'");
+					+ "WHERE action = '" + ActionStatus.DONE.name() + "'");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		
+	}    
+	
+	public void updateActionStatusByRecord(String path, ActionStatus as) {
+		try {
+			update("UPDATE " + TABLE_NAME + " SET action=' " + as.name() + "' " 
+					+ "WHERE path = '" + path +"'");
+			conn.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		
+	}    
+	
+	public void deleteActionStatus(ActionStatus as) {
+		try {
+			 update("DELETE FROM " + TABLE_NAME + " WHERE action = '" + as.name() + "'");
 			conn.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -355,6 +390,7 @@ public class ChecksumDb {
             log.debug("Generate MD5 Checksum of " + files.size() + " files.");
             PreparedStatement psInsert = conn.prepareStatement(INSERT_PREPARED_STATEMENT);
             PreparedStatement psUpdate = conn.prepareStatement(UPDATE_PREPARED_STATEMENT);
+            PreparedStatement psSkip = conn.prepareStatement(SKIP_PREPARED_STATEMENT);
             
             int nRecords = 0;
             int nInsert = 0;
@@ -381,7 +417,7 @@ public class ChecksumDb {
             	} else {
 	            	if (!checksum.equals(hash)) {
 	            			nUpdate++;
-	            			setRecord(psUpdate, hash, path, ActionStatus.UPDATE);
+	            			setUpdateRecord(psUpdate, hash, path, ActionStatus.UPDATE);
 	            			if (nUpdate%10000 ==0) {
 		                    	 totaldatabaseprocessingtime += commitRecords(
 										psUpdate, nUpdate,
@@ -389,7 +425,7 @@ public class ChecksumDb {
 		                    }
 	            		} else {
 	            			nSkip++;
-	            			//setRecord(psUpdate, hash, path, ActionStatus.NONE);
+	            			setSkipRecord(psSkip, path, ActionStatus.NONE);
 	            			if (nSkip%10000==0){
 	            				 totaldatabaseprocessingtime += commitRecords(
 										psUpdate, nUpdate,
@@ -416,7 +452,7 @@ public class ChecksumDb {
             
             if (nSkip%10000 != 0) {
             	totaldatabaseprocessingtime += commitRecords(
-            			psUpdate, nSkip, "Skipping " + nSkip%10000);
+            			psSkip, nSkip, "Skipping " + nSkip%10000);
             }
             
 //            update("DELETE FROM " + TABLE_NAME + " WHERE action = '" + ActionStatus.DONE.name() + "'");
@@ -456,11 +492,17 @@ public class ChecksumDb {
 		psInsert.addBatch();
 	}
 	
-	private void setRecord(PreparedStatement ps, String hash,
+	private void setUpdateRecord(PreparedStatement ps, String hash,
 			String path, ActionStatus action) throws SQLException {
 		ps.setString(1, hash);
 		ps.setString(2, action.name());
 		ps.setString(3, path);
+		ps.addBatch();
+	}
+	
+	private void setSkipRecord(PreparedStatement ps, String path, ActionStatus action) throws SQLException {
+		ps.setString(1, action.name());
+		ps.setString(2, path);
 		ps.addBatch();
 	}
 	

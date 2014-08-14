@@ -48,7 +48,7 @@ public class XsltTransformer implements IAction{
 	
 	public void startUp(Map<String, String> vars)
 			throws ActionException {
-		this.params = vars;
+		params = vars;
 		checkRequiredVariables();
 		startUpCacheService();
 		TransformerFactory transFact = new net.sf.saxon.TransformerFactoryImpl();
