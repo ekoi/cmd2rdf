@@ -8,7 +8,6 @@ import java.util.Collection;
 import nl.knaw.dans.clarin.cmd2rdf.store.db.ChecksumDb;
 
 import org.apache.commons.io.FileUtils;
-import org.hsqldb.lib.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

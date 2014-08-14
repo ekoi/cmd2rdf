@@ -1,14 +1,8 @@
 package nl.knaw.dans.clarin.playground;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 //import org.rabinfingerprint.fingerprint.RabinFingerprintLong;
 //import org.rabinfingerprint.polynomial.Polynomial;
-
-import com.google.common.io.ByteStreams;
 
 public class RabinFingerprintTest {
 

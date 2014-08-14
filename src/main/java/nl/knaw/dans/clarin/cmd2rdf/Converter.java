@@ -3,8 +3,6 @@ package nl.knaw.dans.clarin.cmd2rdf;
 import java.io.File;
 
 import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Source;
-import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;

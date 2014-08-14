@@ -5,13 +5,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
 
-import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
-
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.twmacinta.util.MD5;
 
 public class ChecksumDbMain {
 	private static final Logger log = LoggerFactory.getLogger(ChecksumDbMain.class);

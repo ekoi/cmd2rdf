@@ -24,14 +24,14 @@
 
 package nl.knaw.dans.clarin.playground;
 
-import org.easybatch.core.api.EasyBatchReport;
-import org.easybatch.core.impl.EasyBatchEngine;
-import org.easybatch.core.impl.EasyBatchEngineBuilder;
-
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import org.easybatch.core.api.EasyBatchReport;
+import org.easybatch.core.impl.EasyBatchEngine;
+import org.easybatch.core.impl.EasyBatchEngineBuilder;
 
 /**
  * Main class to run the crypto tutorial with multiple input files in parallel.

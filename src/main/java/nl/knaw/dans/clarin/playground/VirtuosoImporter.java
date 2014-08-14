@@ -7,7 +7,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -17,7 +16,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import nl.knaw.dans.clarin.cmd2rdf.exception.ImportException;
-import nl.knaw.dans.clarin.cmd2rdf.store.VirtuosoClient;
 
 import org.apache.commons.io.FileUtils;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;

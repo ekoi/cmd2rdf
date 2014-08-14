@@ -1,9 +1,6 @@
 package nl.knaw.dans.clarin.cmd2rdf.batch;
 
-import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +15,6 @@ import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
 import nl.knaw.dans.clarin.cmd2rdf.mt.WorkerThread;
 import nl.knaw.dans.clarin.cmd2rdf.store.db.ChecksumDb;
-import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
 import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
 import org.easybatch.core.api.AbstractRecordProcessor;

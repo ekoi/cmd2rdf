@@ -4,20 +4,10 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
 
-import javax.xml.transform.URIResolver;
-import javax.xml.transform.stream.StreamSource;
-
 import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XdmAtomicValue;
-import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
-import net.sf.saxon.s9api.XsltTransformer;
-import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
-import nl.knaw.dans.clarin.cmd2rdf.mt.ClarinProfileResolver;
 
 import org.apache.commons.io.FileUtils;
 import org.joda.time.DateTime;

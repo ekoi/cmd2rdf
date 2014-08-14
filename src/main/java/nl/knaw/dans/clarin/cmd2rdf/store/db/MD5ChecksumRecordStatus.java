@@ -5,13 +5,13 @@ package nl.knaw.dans.clarin.cmd2rdf.store.db;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
 import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
 import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Eko Indarto

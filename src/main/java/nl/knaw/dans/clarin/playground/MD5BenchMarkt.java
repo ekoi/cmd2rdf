@@ -16,7 +16,6 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.ByteStreams;
 import com.twmacinta.util.MD5;
 
 public class MD5BenchMarkt {

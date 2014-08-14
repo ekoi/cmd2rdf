@@ -24,13 +24,13 @@
 
 package nl.knaw.dans.clarin.playground;
 
-import org.easybatch.core.api.RecordReader;
-import org.easybatch.core.util.StringRecord;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.charset.Charset;
 import java.util.Scanner;
+
+import org.easybatch.core.api.RecordReader;
+import org.easybatch.core.util.StringRecord;
 
 /**
  * A {@link RecordReader} implementation that read data from a flat file.

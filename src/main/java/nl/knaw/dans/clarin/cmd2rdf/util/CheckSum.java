@@ -2,12 +2,10 @@ package nl.knaw.dans.clarin.cmd2rdf.util;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.codec.digest.DigestUtils;

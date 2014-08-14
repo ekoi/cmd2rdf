@@ -2,15 +2,15 @@
 
 package nl.knaw.dans.clarin.cmd2rdf.batch;
 
+import java.io.File;
+import java.net.URL;
+import java.nio.file.Paths;
+
 import org.easybatch.core.api.EasyBatchReport;
 import org.easybatch.core.impl.EasyBatchEngine;
 import org.easybatch.core.impl.EasyBatchEngineBuilder;
 import org.easybatch.xml.XmlRecordMapper;
 import org.easybatch.xml.XmlRecordReader;
-
-import java.io.File;
-import java.net.URL;
-import java.nio.file.Paths;
 
 public class Launcher {
 //start virtuosovirtuoso-t +foreground +configfile `find /usr/local -name virtuoso.ini`

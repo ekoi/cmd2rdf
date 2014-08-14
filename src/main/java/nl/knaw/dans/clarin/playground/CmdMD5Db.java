@@ -12,9 +12,6 @@ import java.sql.Statement;
 
 import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.twmacinta.util.MD5;
 
 public class CmdMD5Db {
