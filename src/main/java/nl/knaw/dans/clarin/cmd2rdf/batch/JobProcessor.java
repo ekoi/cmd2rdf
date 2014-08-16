@@ -30,8 +30,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			throws Exception {
 		setupGlolbalConfiguration(job);
 		doPrepare(job.getPrepare().actions);
-		doProcessRecord(job.records.get(0));
-		
+		doProcessRecord(job.records);
 		doCleanup(job.getCleanup().actions);
 	}
 	private void setupGlolbalConfiguration(Jobs job)
@@ -41,7 +40,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		Config c = job.getConfig();
 		List<Property> props = c.property;
 		for (Property prop:props) {
-			System.out.println(prop.name + "\t" + prop.value);
+			//System.out.println(prop.name + "\t" + prop.value);
 			GLOBAL_VARS.put(prop.name, prop.value);
 		}
 		//iterate through map, find whether map values contain {val}
@@ -52,7 +51,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 				String globalVar = m.group(1);
 				if (GLOBAL_VARS.containsKey(globalVar)) {
 					pVal = pVal.replace(m.group(0), GLOBAL_VARS.get(globalVar));
-					System.out.println("pVal contains global, pVal: " + pVal);
+					//System.out.println("pVal contains global, pVal: " + pVal);
 					GLOBAL_VARS.put(e.getKey(), pVal);
 				}
 			}
@@ -66,7 +65,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 					InvocationTargetException, ActionException {
 		List<IAction> actions = new ArrayList<IAction>();
 		for (Action act : list) {
-			System.out.println(act.clazz.name);
+			//System.out.println(act.clazz.name);
 			IAction clazzAction = startUpAction(act);				
 			actions.add(clazzAction);
 		}
@@ -78,11 +77,12 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		}
 	}
 	
-	private void doProcessRecord(Record r)
+	private void doProcessRecord(List<Record> records)
 			throws ClassNotFoundException, InstantiationException,
 			IllegalAccessException, NoSuchFieldException,
 			NoSuchMethodException, InvocationTargetException, ActionException {
 			
+		for(Record r:records) {
 			List<String> paths = null;
 			if (r.xmlSource.contains("urlDB")) {
 				String urlDB = subtituteGlobalValue(r.xmlSource);
@@ -98,23 +98,33 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 				IAction clazzAction = startUpAction(act);				
 				actions.add(clazzAction);
 			}
-			
-			ExecutorService executor = Executors.newFixedThreadPool(r.nThreads);
-			log.info("@@@ begin of execution, size: " + paths.size() );
-	    	for (String path : paths) {
-	    		 Runnable worker = new WorkerThread(path, actions);
-	             executor.execute(worker);
-	        }
-			executor.shutdown();
-			 
-			while (!executor.isTerminated()) {}
-			 
-			log.info("Finished all threads");
+			if (r.nThreads>1) 
+				doMultithreadingAction(r, paths, actions);
+			else {
+				for(IAction action : actions) {
+					for (String path:paths)
+						action.execute(path,null);
+				}
+			}
 	         
 			for(IAction action : actions) {
 				action.shutDown();
 			}
+		}
 			
+	}
+	private void doMultithreadingAction(Record r, List<String> paths,
+			List<IAction> actions) {
+		ExecutorService executor = Executors.newFixedThreadPool(r.nThreads);
+		log.info("Number of processed records files: " + paths.size() );
+		for (String path : paths) {
+			 Runnable worker = new WorkerThread(path, actions);
+		     executor.execute(worker);
+		}
+		executor.shutdown();
+		 
+		while (!executor.isTerminated()) {}
+		log.info("Finished all threads");
 	}
 	
 	private void doCleanup(List<Action> list) 
@@ -123,7 +133,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 					NoSuchMethodException, InvocationTargetException, ActionException {
 		List<IAction> actions = new ArrayList<IAction>();
 		for (Action act : list) {
-			System.out.println(act.clazz.name);
+			//System.out.println(act.clazz.name);
 			IAction clazzAction = startUpAction(act);				
 			actions.add(clazzAction);
 		}

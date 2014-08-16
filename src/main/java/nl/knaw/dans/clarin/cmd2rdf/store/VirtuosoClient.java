@@ -24,6 +24,8 @@ import javax.xml.transform.stream.StreamResult;
 
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
+import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
+import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.slf4j.Logger;
@@ -40,21 +42,24 @@ public class VirtuosoClient implements IAction{
 	private Client client;
 	private String replacedPrefixBaseURI;
 	private String prefixBaseURI;
-	protected String serverURL;
-	protected String username;
-	protected String password;
+	private String serverURL;
+	private String username;
+	private String password;
+	private ActionStatus act;
+	
 
 	public VirtuosoClient(){
 	}
 
 	public void startUp(Map<String, String> vars)
 			throws ActionException {
-		this.replacedPrefixBaseURI = vars.get("replacedPrefixBaseURI");
-		this.prefixBaseURI = vars.get("prefixBaseURI");
-		this.serverURL = vars.get("serverURL");
-		this.username = vars.get("username");
-		this.password = vars.get("password");
-
+		replacedPrefixBaseURI = vars.get("replacedPrefixBaseURI");
+		prefixBaseURI = vars.get("prefixBaseURI");
+		serverURL = vars.get("serverURL");
+		username = vars.get("username");
+		password = vars.get("password");
+		String action = vars.get("action");
+		
 		if (replacedPrefixBaseURI == null || replacedPrefixBaseURI.isEmpty())
 			throw new ActionException("replacedPrefixBaseURI is null or empty");
 		if (prefixBaseURI == null || prefixBaseURI.isEmpty())
@@ -65,6 +70,10 @@ public class VirtuosoClient implements IAction{
 			throw new ActionException("username is null or empty");
 		if (password == null || password.isEmpty())
 			throw new ActionException("password is null or empty");
+		if (action == null || action.isEmpty())
+			throw new ActionException("action is null or empty");
+		
+		act = Misc.convertToActionStatus(action);
 	
 		log.debug("VirtuosoClient variables: ");
 		log.debug("replacedPrefixBaseURI: " + replacedPrefixBaseURI);
@@ -72,6 +81,7 @@ public class VirtuosoClient implements IAction{
 		log.debug("serverURL: " + serverURL);
 		log.debug("username: " + username);
 		log.debug("password: " + password);
+		log.debug("action: " + action);
 		log.debug("Start VirtuosoClient....");
 		
 //		ClientConfig clientConfig = new ClientConfig();
@@ -85,41 +95,71 @@ public class VirtuosoClient implements IAction{
 //curl --digest --user dba:dba --verbose --url "http://localhost:8000/sparql-graph-crud-auth?graph-uri=http://localhost:8880/DAV/
 	//xx/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus.rdf" -T /Users/akmi/eko77/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus.rdf	
 	public Object execute(String path, Object object) throws ActionException {
-		byte[] bytes = null;
-		// prepare input
-		if (object instanceof Node) {
-			Node node = (Node)object;
-			DOMSource source = new DOMSource(node);
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			StreamResult result = new StreamResult(bos);
-			try {
-				TransformerFactory.newInstance().newTransformer().transform(source,result);
-				bytes = bos.toByteArray();
-				String gIRI = path.replace(".xml", ".rdf").replace(this.replacedPrefixBaseURI, this.prefixBaseURI).replaceAll(" ", "_");
-				UriBuilder uriBuilder = UriBuilder.fromUri(new URI(serverURL));
-				uriBuilder.queryParam(NAMED_GRAPH_IRI, gIRI);
-				WebTarget target = client.target(uriBuilder.build());
-				Response response = target.request().post(Entity.entity(bytes, MediaType.APPLICATION_OCTET_STREAM));
-				//Response response = target.request().delete();
-				int status = response.getStatus();
-				log.debug("Upload " + (path.replace(".xml", ".rdf")) + " to virtuoso server.\nResponse status: " + status);
-				if ((status == Response.Status.CREATED.getStatusCode()) || (status == Response.Status.OK.getStatusCode()))
-					return true;
-			} catch (TransformerConfigurationException e) {
-				log.error("ERROR: TransformerConfigurationException, caused by " + e.getMessage());
-			} catch (TransformerException e) {
-				log.error("ERROR: TransformerException, caused by " + e.getMessage());
-			} catch (TransformerFactoryConfigurationError e) {
-				log.error("ERROR: TransformerFactoryConfigurationError, caused by " + e.getMessage());
-			} catch (URISyntaxException e) {
-				log.error("ERROR: URISyntaxException, caused by " + e.getMessage());
-			}
-			
-		} else
-			throw new ActionException("Unknown input ("+path+", "+object+")");
+		boolean status = false;
+		switch(act){
+			case POST: status = uploadRdfToVirtuoso(path, object);
+				break; 
+			case DELETE: status = deleteRdfFromVirtuoso(path);
+				break;
+			default:
+		}
 
-		return false;
+		return status;
 	}
+
+private boolean deleteRdfFromVirtuoso(String path) {
+	String gIRI = path.replace(".xml", ".rdf").replace(this.replacedPrefixBaseURI, this.prefixBaseURI).replaceAll(" ", "_");
+	UriBuilder uriBuilder;
+	try {
+		uriBuilder = UriBuilder.fromUri(new URI(serverURL));
+		uriBuilder.queryParam(NAMED_GRAPH_IRI, gIRI);
+		WebTarget target = client.target(uriBuilder.build());
+		Response response = target.request().delete();
+		int status = response.getStatus();
+		log.debug("Upload " + (path.replace(".xml", ".rdf")) + " to virtuoso server.\nResponse status: " + status);
+		if ((status == Response.Status.CREATED.getStatusCode()) || (status == Response.Status.OK.getStatusCode()))
+			return true;	
+	} catch (URISyntaxException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	
+	return false;
+}
+
+private boolean uploadRdfToVirtuoso(String path, Object object)
+		throws ActionException {
+	if (object instanceof Node) {
+		Node node = (Node)object;
+		DOMSource source = new DOMSource(node);
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		StreamResult result = new StreamResult(bos);
+		try {
+			TransformerFactory.newInstance().newTransformer().transform(source,result);
+			String gIRI = path.replace(".xml", ".rdf").replace(this.replacedPrefixBaseURI, this.prefixBaseURI).replaceAll(" ", "_");
+			UriBuilder uriBuilder = UriBuilder.fromUri(new URI(serverURL));
+			uriBuilder.queryParam(NAMED_GRAPH_IRI, gIRI);
+			WebTarget target = client.target(uriBuilder.build());
+			byte[] bytes = bos.toByteArray();
+			Response response = target.request().post(Entity.entity(bytes, MediaType.APPLICATION_OCTET_STREAM));
+			int status = response.getStatus();
+			log.debug("Upload " + (path.replace(".xml", ".rdf")) + " to virtuoso server.\nResponse status: " + status);
+			if ((status == Response.Status.CREATED.getStatusCode()) || (status == Response.Status.OK.getStatusCode()))
+				return true;
+		} catch (TransformerConfigurationException e) {
+			log.error("ERROR: TransformerConfigurationException, caused by " + e.getMessage());
+		} catch (TransformerException e) {
+			log.error("ERROR: TransformerException, caused by " + e.getMessage());
+		} catch (TransformerFactoryConfigurationError e) {
+			log.error("ERROR: TransformerFactoryConfigurationError, caused by " + e.getMessage());
+		} catch (URISyntaxException e) {
+			log.error("ERROR: URISyntaxException, caused by " + e.getMessage());
+		}
+		
+	} else
+		throw new ActionException("Unknown input ("+path+", "+object+")");
+	return false;
+}
 	
 
 	public void shutDown() throws ActionException {

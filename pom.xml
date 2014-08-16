@@ -337,7 +337,7 @@
 				  
 				  
 				  <execution>
-				      <id>make-assembly ChecksumDbMain</id> <!-- this is used for inheritance merges -->
+				      <id>make-assembly Launcher</id> <!-- this is used for inheritance merges -->
 				      <phase>package</phase> <!-- bind to the packaging phase -->
 				      <goals>
 				        <goal>single</goal>
@@ -345,13 +345,13 @@
 				      <configuration>
 					    <archive>
 					      <manifest>
-					        <mainClass>nl.knaw.dans.clarin.cmd2rdf.store.db.ChecksumDbMain</mainClass>
+					        <mainClass>nl.knaw.dans.clarin.cmd2rdf.batch.Launcher</mainClass>
 					      </manifest>
 					    </archive>
 					    <descriptorRefs>
 					      <descriptorRef>jar-with-dependencies</descriptorRef>
 					    </descriptorRefs>
-					    <finalName>ChecksumDbMain</finalName>
+					    <finalName>Launcher</finalName>
 					    <appendAssemblyId>false</appendAssemblyId>
 				  	</configuration>
 				  

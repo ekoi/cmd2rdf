@@ -29,7 +29,9 @@ public class ChecksumDb {
 	private static final String INSERT_PREPARED_STATEMENT = "INSERT INTO " + TABLE_NAME + "(path, md5, status) VALUES(?,?,?)";
 	private static final String NEW_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.NEW + "'";
 	private static final String UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.UPDATE + "'";
-	private static final String NEW_OR_UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.NEW + "' OR status ='" + ActionStatus.UPDATE + "'";
+	private static final String DELETE_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.DELETE + "'";
+	private static final String NEW_OR_UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE status='" 
+													+ ActionStatus.NEW + "' OR status ='" + ActionStatus.UPDATE + "'";
 	
 	private static boolean initialdata = false;
 	private static long totalQueryDuration;
@@ -50,6 +52,7 @@ public class ChecksumDb {
     }
 
 	private void init(String db_file_name_prefix){
+		log.debug("Initiate database connection.");
 		try {
 			Class.forName("org.hsqldb.jdbcDriver");
 			conn = DriverManager.getConnection("jdbc:hsqldb:"
@@ -82,20 +85,8 @@ public class ChecksumDb {
 			checkAndstore(files);
 	}
 
-//	public void updateStatus(ActionStatus as) {
-//		try {
-//			update("UPDATE " + TABLE_NAME + " SET status='" + as.name() + "' " 
-//					+ "WHERE status = '" + ActionStatus.NEW.name() + "' " 
-//							+ "OR status='" + ActionStatus.UPDATE.name() +"'");
-//			conn.commit();
-//		} catch (SQLException e) {
-//			e.printStackTrace();
-//		}
-//		
-//		
-//	}   
-	
 	public void updateStatusOfDoneStatus(ActionStatus as) {
+		log.debug("Update the status of all records to " + as.name() + " where status is 'DONE'");
 		try {
 			update("UPDATE " + TABLE_NAME + " SET status='" + as.name() + "' " 
 					+ "WHERE status = '" + ActionStatus.DONE.name() + "'");
@@ -108,6 +99,7 @@ public class ChecksumDb {
 	}    
 	
 	public void updateActionStatusByRecord(String path, ActionStatus as) {
+		log.debug("Update the status to " + as.name() + " where path is '" + path + "'");
 		try {
 			update("UPDATE " + TABLE_NAME + " SET status='" + as.name() + "' " 
 					+ "WHERE path = '" + path +"'");
@@ -131,8 +123,6 @@ public class ChecksumDb {
 	}    
 	
 	private void createTable() throws SQLException {
-		//update("DROP TABLE CMD_MD5 IF EXISTS");
-		//conn.commit();
 		log.debug("CREATE A NEW TABLE, table name: " + TABLE_NAME);
 		update(
                 "CREATE TABLE " + TABLE_NAME 
@@ -179,14 +169,16 @@ public class ChecksumDb {
     	try {
     	
     	switch (as) {
-	    		case NEW: paths=getNewRecords();
+	    		case NEW: paths=getRecordsWithStatusNew();
 	    			break;
-	    		case UPDATE: paths = getUpdatedRecords();
+	    		case UPDATE: paths = getRecordsWithStatusUpdate();
 	    			break;
-	    		case NEW_UPDATE: paths = getNewOrUpdatedRecords();
+	    		case NEW_UPDATE: paths = getRecordsWithStatusNewOrUpdate();
+	    			break;
+	    		case DELETE: paths = getRecordWithStatusDelete();
 	    			break;
 			default:
-				paths = getNewOrUpdatedRecords();
+				paths = getRecordsWithStatusNewOrUpdate();
 				break;
 	    	}
     	}catch (SQLException e) {
@@ -195,7 +187,22 @@ public class ChecksumDb {
     	return paths;
     }
     
-    public List<String> getNewRecords() throws SQLException {
+    private List<String> getRecordWithStatusDelete() throws SQLException {
+    	List<String> paths = new ArrayList<String>();
+    	long t = System.currentTimeMillis();
+        Statement st = conn.createStatement();        
+        ResultSet rs = st.executeQuery(DELETE_RECORD_QUERY);    
+        for (; rs.next(); ) {
+        	String path = rs.getString("path"); 
+        	paths.add(path);
+        }
+        st.close(); 
+        long duration = (System.currentTimeMillis()-t);
+        log.debug("Checksum query NEW_RECORD_QUERY needs " + duration + " milliseconds.");
+    	return paths;
+	}
+
+	public List<String> getRecordsWithStatusNew() throws SQLException {
     	List<String> paths = new ArrayList<String>();
     	long t = System.currentTimeMillis();
         Statement st = conn.createStatement();        
@@ -209,7 +216,7 @@ public class ChecksumDb {
         log.debug("Checksum query NEW_RECORD_QUERY needs " + duration + " milliseconds.");
     	return paths;
     }
-    public List<String> getUpdatedRecords() throws SQLException {
+    public List<String> getRecordsWithStatusUpdate() throws SQLException {
     	List<String> paths = new ArrayList<String>();
     	long t = System.currentTimeMillis();
         Statement st = conn.createStatement();        
@@ -223,7 +230,7 @@ public class ChecksumDb {
         log.debug("Checksum query UPDATED_RECORD_QUERY needs " + duration + " milliseconds.");
     	return paths;
     }
-    public List<String> getNewOrUpdatedRecords() throws SQLException {
+    public List<String> getRecordsWithStatusNewOrUpdate() throws SQLException {
     	List<String> paths = new ArrayList<String>();
     	long t = System.currentTimeMillis();
         Statement st = conn.createStatement();        
@@ -303,6 +310,17 @@ public class ChecksumDb {
     	int total = 0;
         Statement st = conn.createStatement();        
         ResultSet rs = st.executeQuery("SELECT count(*) AS total FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.NONE.name() + "'");    
+        for (; rs.next(); ) {
+        	total = rs.getInt("total"); 
+        }
+        st.close();   
+        return total;
+    }  
+    
+    public int getTotalNumberOfDeleteRecords() throws SQLException {
+    	int total = 0;
+        Statement st = conn.createStatement();        
+        ResultSet rs = st.executeQuery("SELECT count(*) AS total FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.DELETE.name() + "'");    
         for (; rs.next(); ) {
         	total = rs.getInt("total"); 
         }
@@ -423,6 +441,7 @@ public class ChecksumDb {
                     }
             	} else {
 	            	if (!checksum.equals(hash)) {
+	            		System.out.println("++++++++++++++++++++++++++++++++++++++ UPDATE " + file.getName());	
 	            			nUpdate++;
 	            			setUpdateRecord(psUpdate, hash, path, ActionStatus.UPDATE);
 	            			if (nUpdate%10000 ==0) {
@@ -431,6 +450,7 @@ public class ChecksumDb {
 										"Updating 10.000");
 		                    }
 	            		} else {
+	            			System.out.println("<<<<< SKIP " + file.getName());
 	            			nSkip++;
 	            			setSkipRecord(psSkip, path, ActionStatus.NONE);
 	            			if (nSkip%10000==0){
