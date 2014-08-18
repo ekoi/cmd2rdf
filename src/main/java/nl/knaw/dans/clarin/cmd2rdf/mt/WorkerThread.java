@@ -1,5 +1,10 @@
 package nl.knaw.dans.clarin.cmd2rdf.mt;
 
+/**
+ * @author Eko Indarto
+ *
+ */
+
 import java.io.File;
 import java.util.List;
 
@@ -27,8 +32,7 @@ public class WorkerThread implements Runnable {
         try {
 			executeActions(path);
 		} catch (ActionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("ERROR WorkerThread, caused by " + e.getMessage());
 		}
 
     }

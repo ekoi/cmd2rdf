@@ -126,7 +126,6 @@ public class XsltTransformer implements IAction{
 			cacheService.close();
 		} catch (IOException e) {
 			log.error("ERROR caused by IOException, msg:  " + e.getMessage());
-			e.printStackTrace();
 		}
 	}
 

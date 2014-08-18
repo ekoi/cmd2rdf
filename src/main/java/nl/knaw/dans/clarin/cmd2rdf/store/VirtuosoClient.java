@@ -1,6 +1,3 @@
-/**
- * 
- */
 package nl.knaw.dans.clarin.cmd2rdf.store;
 
 import java.io.ByteArrayOutputStream;
@@ -91,9 +88,7 @@ public class VirtuosoClient implements IAction{
 		HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.digest(username, password);
 		client.register(authFeature);
 	}
-//curl --digest --user dba:dba --verbose --url "http://example.com/sparql-graph-crud-auth?graph-uri=urn:graph:update:test:put" -T books.ttl 
-//curl --digest --user dba:dba --verbose --url "http://localhost:8000/sparql-graph-crud-auth?graph-uri=http://localhost:8880/DAV/
-	//xx/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus.rdf" -T /Users/akmi/eko77/oai_SinicaCorpus_sinica_edu_tw_SinicaCorpus.rdf	
+
 	public Object execute(String path, Object object) throws ActionException {
 		boolean status = false;
 		switch(act){

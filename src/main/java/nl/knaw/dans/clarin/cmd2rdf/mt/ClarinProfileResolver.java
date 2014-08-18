@@ -95,7 +95,7 @@ public class ClarinProfileResolver implements URIResolver {
 	}
 
 	private StreamSource fetchAndWriteToCache(String href, String filename) {
-		log.debug("========== Download from registry: " + filename);
+		log.debug("Download profile '" + filename + "' from registry.");
 		URL url;
 		final ReadWriteLock rwl = new ReentrantReadWriteLock();
 		try {
@@ -114,7 +114,7 @@ public class ClarinProfileResolver implements URIResolver {
 			 byte b[] = sb.toString().getBytes(StandardCharsets.UTF_8);
 			 InputStream is = new ByteArrayInputStream(b);
 			 cacheservice.putByteArray(filename, b);
-			 log.debug(">>>> " + cacheservice.entries() + " put to catche service: " + filename);
+			 log.debug(cacheservice.entries() + " put to cache service and save it as file: " + filename);
 			 rwl.writeLock().lock();
 			 FileUtils.writeByteArrayToFile(new File(basePath + "/" + filename), b);
 			 
@@ -135,7 +135,7 @@ public class ClarinProfileResolver implements URIResolver {
 		StreamSource stream = null;
 		final ReadWriteLock rwl = new ReentrantReadWriteLock();
 		rwl.readLock().lock();
-		log.debug("-----read cache from file and put in the memory cache: " + filename);
+		log.debug("Read cache from file and put in the memory cache: " + filename);
 		
 		try {
 			byte[] bytes = FileUtils.readFileToByteArray(file);

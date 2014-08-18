@@ -1,7 +1,9 @@
-/**
- * 
- */
 package nl.knaw.dans.clarin.cmd2rdf.batch;
+
+/**
+ * @author Eko Indarto
+ *
+ */
 
 import java.util.List;
 

@@ -1,7 +1,9 @@
-/**
- * 
- */
 package nl.knaw.dans.clarin.cmd2rdf.batch;
+
+/**
+ * @author Eko Indarto
+ *
+ */
 
 import java.util.List;
 
@@ -11,10 +13,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/**
- * @author Eko Indarto
- *
- */
 @SuppressWarnings("restriction")
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name="cleanup")

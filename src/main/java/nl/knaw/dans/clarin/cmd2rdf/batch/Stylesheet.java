@@ -1,3 +1,7 @@
+/**
+ * @author Eko Indarto
+ *
+ */
 package nl.knaw.dans.clarin.cmd2rdf.batch;
 
 import javax.xml.bind.annotation.XmlAccessType;

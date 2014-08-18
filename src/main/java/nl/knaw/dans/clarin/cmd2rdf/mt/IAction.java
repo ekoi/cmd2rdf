@@ -1,5 +1,10 @@
 package nl.knaw.dans.clarin.cmd2rdf.mt;
 
+/**
+ * @author Eko Indarto
+ *
+ */
+
 import java.util.Map;
 
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;

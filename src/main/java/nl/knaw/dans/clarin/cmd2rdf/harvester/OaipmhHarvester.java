@@ -1,6 +1,3 @@
-/**
- * 
- */
 package nl.knaw.dans.clarin.cmd2rdf.harvester;
 
 import java.io.File;
@@ -45,14 +42,16 @@ public class OaipmhHarvester implements IAction{
 	 * @throws IOException 
 	 */
 	private boolean harvest(){
+		log.debug("Harvesting... ");
+		log.debug("baseUrl: " + oaipmhBaseURL);
+		log.debug("prefix: " + prefix);
+		log.debug("SET: " + set);
 		boolean ok = true;
 		Document doc = DocumentFactory.getInstance()
 				.createDocument();
 		Element rootElement = null;
 		OaiPmhServer server = new OaiPmhServer(oaipmhBaseURL);
-		log.debug("baseUrl: " + oaipmhBaseURL);
-		log.debug("prefix: " + prefix);
-		log.debug("SET: " + set);
+		
 		try {
 			RecordsList records = server.listRecords(
 					prefix, null, null,
@@ -115,7 +114,6 @@ public class OaipmhHarvester implements IAction{
 		return harvest();
 	}
 	public void shutDown() throws ActionException {
-		// TODO Auto-generated method stub
 		
 	}
 	
@@ -153,7 +151,7 @@ public class OaipmhHarvester implements IAction{
 			);
 			log.debug("Writing rdf file to " + outputFile);
 			writer.write( doc );
-			 writer.close();
+			writer.close();
 		} catch (IOException e) {
 			log.error("ERROR: IOException, caused by " + e.getMessage());
 			return false;

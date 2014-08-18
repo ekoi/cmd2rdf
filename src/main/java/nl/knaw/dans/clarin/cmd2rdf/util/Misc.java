@@ -3,6 +3,11 @@
  */
 package nl.knaw.dans.clarin.cmd2rdf.util;
 
+/**
+ * @author Eko Indarto
+ *
+ */
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -16,10 +21,6 @@ import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author akmi
- *
- */
 public class Misc {
 	private static final Logger log = LoggerFactory.getLogger(Misc.class);
 	private final static Pattern pattern = Pattern.compile("\\{(.*?)\\}");
@@ -29,6 +30,7 @@ public class Misc {
 	}
 	
 	public static String subtituteGlobalValue(Map<String, String> globalVars, String pVal) {
+		log.debug("Subtitute global value to local variable.");
 		Matcher m = pattern.matcher(pVal);
 		if (m.find()) {
 			String globalVar = m.group(1);
@@ -45,6 +47,7 @@ public class Misc {
 	public static Map<String, String> mergeVariables(
 			Map<String, String> globalVars, List<Property> localVars) {
 		Map<String,String> vars = new HashMap<String,String>(globalVars);
+		log.debug("Merge variables.");
 		for (Property arg : Misc.emptyIfNull(localVars)) {
 			String pName = arg.name;
 			String pVal = arg.value;
@@ -56,6 +59,7 @@ public class Misc {
 
 	public static ActionStatus convertToActionStatus(String words)
 			throws ActionException {
+		log.debug("Convert a word(s) to Enum value of ActionStatus.");
 		String[] w = words.trim().split(" ");
 		int len = w.length;
 		StringBuffer sb = new StringBuffer();

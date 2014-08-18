@@ -4,7 +4,7 @@
 package nl.knaw.dans.clarin.cmd2rdf.exception;
 
 /**
- * @author akmi
+ * @author Eko Indarto
  *
  */
 public class ActionException extends Exception {

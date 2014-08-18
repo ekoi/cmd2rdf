@@ -1,5 +1,10 @@
 package nl.knaw.dans.clarin.cmd2rdf.batch;
 
+/**
+ * @author Eko Indarto
+ *
+ */
+
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -23,6 +28,7 @@ import org.slf4j.LoggerFactory;
 public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 	private static final Logger log = LoggerFactory.getLogger(JobProcessor.class);
 	private final Pattern pattern = Pattern.compile("\\{(.*?)\\}");
+	private static final String URL_DB = "urlDB";
 	private static final Map<String, String> GLOBAL_VARS = new HashMap<String, String>();
 	
 
@@ -37,10 +43,10 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			throws IntrospectionException, 
 					IllegalAccessException,
 					InvocationTargetException {
+		log.debug("Setup the global configuration");
 		Config c = job.getConfig();
 		List<Property> props = c.property;
 		for (Property prop:props) {
-			//System.out.println(prop.name + "\t" + prop.value);
 			GLOBAL_VARS.put(prop.name, prop.value);
 		}
 		//iterate through map, find whether map values contain {val}
@@ -51,7 +57,6 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 				String globalVar = m.group(1);
 				if (GLOBAL_VARS.containsKey(globalVar)) {
 					pVal = pVal.replace(m.group(0), GLOBAL_VARS.get(globalVar));
-					//System.out.println("pVal contains global, pVal: " + pVal);
 					GLOBAL_VARS.put(e.getKey(), pVal);
 				}
 			}
@@ -63,9 +68,9 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 					InstantiationException, IllegalAccessException,
 					NoSuchFieldException, NoSuchMethodException,
 					InvocationTargetException, ActionException {
+		log.debug("Execute prepare actions.");
 		List<IAction> actions = new ArrayList<IAction>();
 		for (Action act : list) {
-			//System.out.println(act.clazz.name);
 			IAction clazzAction = startUpAction(act);				
 			actions.add(clazzAction);
 		}
@@ -81,10 +86,10 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			throws ClassNotFoundException, InstantiationException,
 			IllegalAccessException, NoSuchFieldException,
 			NoSuchMethodException, InvocationTargetException, ActionException {
-			
+		log.debug("Execute records.");	
 		for(Record r:records) {
 			List<String> paths = null;
-			if (r.xmlSource.contains("urlDB")) {
+			if (r.xmlSource.contains(URL_DB)) {
 				String urlDB = subtituteGlobalValue(r.xmlSource);
 				ChecksumDb cdb = new ChecksumDb(urlDB);
 		    	paths = cdb.getRecords(Misc.convertToActionStatus(r.filter));
@@ -94,7 +99,6 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			List<IAction> actions = new ArrayList<IAction>();
 			List<Action> list = r.actions;
 			for (Action act : list) {
-				System.out.println(act.clazz.name);
 				IAction clazzAction = startUpAction(act);				
 				actions.add(clazzAction);
 			}
@@ -115,6 +119,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 	}
 	private void doMultithreadingAction(Record r, List<String> paths,
 			List<IAction> actions) {
+		log.debug("Multithreading is on, number of threads: " + r.nThreads);
 		ExecutorService executor = Executors.newFixedThreadPool(r.nThreads);
 		log.info("Number of processed records files: " + paths.size() );
 		for (String path : paths) {
@@ -124,16 +129,16 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		executor.shutdown();
 		 
 		while (!executor.isTerminated()) {}
-		log.info("Finished all threads");
+		log.info("===Finished all threads===");
 	}
 	
 	private void doCleanup(List<Action> list) 
 				throws ClassNotFoundException, InstantiationException, 
 					IllegalAccessException, NoSuchFieldException, 
 					NoSuchMethodException, InvocationTargetException, ActionException {
+		log.debug("Execute cleanup part.");	
 		List<IAction> actions = new ArrayList<IAction>();
 		for (Action act : list) {
-			//System.out.println(act.clazz.name);
 			IAction clazzAction = startUpAction(act);				
 			actions.add(clazzAction);
 		}
@@ -164,8 +169,6 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			if (GLOBAL_VARS.containsKey(globalVar)) {
 				pVal = pVal.replace(m.group(0),
 						GLOBAL_VARS.get(globalVar));
-				System.out.println("pVal contains global, pVal: "
-						+ pVal);
 			}
 		}
 		return pVal;

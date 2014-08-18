@@ -1,10 +1,11 @@
-
-
 package nl.knaw.dans.clarin.cmd2rdf.batch;
 
+/**
+ * @author Eko Indarto
+ *
+ */
+
 import java.io.File;
-import java.net.URL;
-import java.nio.file.Paths;
 
 import org.easybatch.core.api.EasyBatchReport;
 import org.easybatch.core.impl.EasyBatchEngine;
@@ -13,19 +14,18 @@ import org.easybatch.xml.XmlRecordMapper;
 import org.easybatch.xml.XmlRecordReader;
 
 public class Launcher {
-//start virtuosovirtuoso-t +foreground +configfile `find /usr/local -name virtuoso.ini`
+	
     public static void main(String[] args) throws Exception {
-    	//Thread.sleep(30000);
-    	File f = null;
-    	if (args != null && args.length == 1)
-    		f = new File (args[0]);
-    	else {
-    		URL resource = Launcher.class.getResource("/Users/akmi/Desktop/cmd2rdf-jobs.xml");
-    		f = Paths.get(resource.toURI()).toFile();
+    	if (args == null || args.length !=1 
+    			|| !(new File (args[0]).isFile())
+    			|| !(new File (args[0])).getName().endsWith(".xml")) {
+    		System.out.println("An XML configuration file is required.");
+    		System.exit(1);
     	}
+    	
         // Build an easy batch engine
         EasyBatchEngine easyBatchEngine = new EasyBatchEngineBuilder()
-                .registerRecordReader(new XmlRecordReader("CMD2RDF", f))
+                .registerRecordReader(new XmlRecordReader("CMD2RDF", new File(args[0])))
                 .registerRecordMapper(new XmlRecordMapper<Jobs>(Jobs.class))
                 .registerRecordProcessor(new JobProcessor())
                 .build();
