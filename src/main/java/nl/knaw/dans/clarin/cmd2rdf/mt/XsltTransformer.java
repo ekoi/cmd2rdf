@@ -81,6 +81,7 @@ public class XsltTransformer implements IAction{
 			    .setConcurrencyLevel( 4 )
 			    .newCacheService();
 		cacheService.scheduleDisposalEvery(30,TimeUnit.MINUTES);
+		log.debug("############################### STARTUP CACHE SERVICE");
 	}
 	
 	public Object execute(String p,Object o) throws ActionException {
@@ -124,6 +125,7 @@ public class XsltTransformer implements IAction{
     }     
 	
 	public void shutDownCacheService() {
+		log.debug("--------------------------------- SHUTDOWN CACHE SERVICE");
 		cacheService.clear();
         try {
 			cacheService.close();

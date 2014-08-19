@@ -89,25 +89,26 @@ public class ClarinProfileResolver implements URIResolver {
 			filename = file.getAbsolutePath();
 		}
 	    if (cacheservice.retrieveByteArray(filename) != null) {
-	    	log.debug("Using profile from the cache: " + href);
+	    	log.debug("Using profile from the cache service. Key: " + filename + "\tValue: " + href);
 	    	byte b[] = (byte[]) cacheservice.retrieveByteArray(filename);
 	    	InputStream is = new ByteArrayInputStream(b);
 	    	 return new StreamSource(is);
-	    }
-
-	    if (file.exists()) {
-	    	return loadFromFile(filename, file);
 	    } else {
-	    	return fetchAndWriteToCache(href, filename);
+	    	log.debug(filename + " is not in the cache service.");
+	    	if (file.exists()) {
+		    	return loadFromFile(filename, file);
+		    } else {
+		    	return fetchAndWriteToCache(href, filename);
+		    }
 	    }
-
 	}
 
 	private StreamSource fetchAndWriteToCache(String href, String filename) {
-		log.debug("Download profile '" + filename + "' from registry.");
+		log.debug("Download profile '" + filename + "' from registry. HREF: " + href);
 		final ReadWriteLock rwl = new ReentrantReadWriteLock();
 		try {
 			if (href.contains("p_1360230992133")) {
+				log.debug(">>>>>>>>>> THIS PART NEED TO REFACTOR");;
 				href = "http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1360230992133/xml";
 				filename = "clarin.eu_cr1_p_1360230992133.xml";
 			}
@@ -173,7 +174,7 @@ public class ClarinProfileResolver implements URIResolver {
 		StreamSource stream = null;
 		final ReadWriteLock rwl = new ReentrantReadWriteLock();
 		rwl.readLock().lock();
-		log.debug("Read cache from file and put in the memory cache: " + filename);
+		log.debug("Read cache from file and put in the cache service. Filename:  " + filename + "\tFile abspath: " + file.getAbsolutePath());
 		
 		try {
 			byte[] bytes = FileUtils.readFileToByteArray(file);
