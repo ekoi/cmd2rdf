@@ -154,14 +154,11 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 	} else
 		throw new ActionException("Unknown input ("+path+", "+object+")");
 	return false;
-}
+	}
 	
 
 	public void shutDown() throws ActionException {
 		// TODO Auto-generated method stub
 		
 	}
-	
-
-
 }

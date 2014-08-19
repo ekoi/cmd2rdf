@@ -34,7 +34,7 @@ public class MD5ChecksumDBAction implements IAction {
 		db = new ChecksumDb(urlDB);
 		act = Misc.convertToActionStatus(action);
 		
-		log.debug("startUp");
+		log.debug("startUp MD5ChecksumDBAction");
 		log.debug("urlDB: " + urlDB);
 		log.debug("xmlSourceDir: " + xmlSourceDir);
 	}
@@ -101,5 +101,4 @@ public class MD5ChecksumDBAction implements IAction {
 		else
 			db.closeDbConnection();
 	}
-
 }

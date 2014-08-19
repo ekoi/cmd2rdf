@@ -6,6 +6,8 @@ package nl.knaw.dans.clarin.cmd2rdf.mt;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -74,18 +76,25 @@ public class ClarinProfileResolver implements URIResolver {
 		}
 		log.debug("Profile URI: " + href);
 		log.debug("xsl base: " + base);
-		String filename = href.replace(registry+"/rest/registry/profiles/", "");//TODO: Don't use hard coded!!!
-		filename = filename.replace("/xml", ".xml");
-		filename = filename.replace(":", "_");
-	    
+		String filename = null;
+		File file = null;
+		Object oHref =  getHrefAsURLorFile(href);
+		if (oHref instanceof URL) {
+			filename = href.replace(registry+"/rest/registry/profiles/", "");//TODO: Don't use hard coded!!!
+			filename = filename.replace("/xml", ".xml");
+			filename = filename.replace(":", "_");
+			file = new File(basePath + "/" + filename);
+		} else {
+			file = (File)oHref;
+			filename = file.getAbsolutePath();
+		}
 	    if (cacheservice.retrieveByteArray(filename) != null) {
-	    	log.debug("########## Using profile from the cache: " + href);
+	    	log.debug("Using profile from the cache: " + href);
 	    	byte b[] = (byte[]) cacheservice.retrieveByteArray(filename);
 	    	InputStream is = new ByteArrayInputStream(b);
 	    	 return new StreamSource(is);
 	    }
 
-	    File file = new File(basePath + "/" + filename);
 	    if (file.exists()) {
 	    	return loadFromFile(filename, file);
 	    } else {
@@ -96,39 +105,68 @@ public class ClarinProfileResolver implements URIResolver {
 
 	private StreamSource fetchAndWriteToCache(String href, String filename) {
 		log.debug("Download profile '" + filename + "' from registry.");
-		URL url;
 		final ReadWriteLock rwl = new ReentrantReadWriteLock();
 		try {
-		    if (href.contains("p_1360230992133")) {
-		    	href = "http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1360230992133/xml";
-		    	filename = "clarin.eu_cr1_p_1360230992133.xml";
-		    }
-		    url = new URL(href);
-			BufferedReader in = new BufferedReader(
-			        new InputStreamReader(url.openStream()));
-			 String inputLine;
-			 StringBuffer sb = new StringBuffer();
-		        while ((inputLine = in.readLine()) != null)
-		            sb.append(inputLine);
-		        in.close();
-			 byte b[] = sb.toString().getBytes(StandardCharsets.UTF_8);
-			 InputStream is = new ByteArrayInputStream(b);
-			 cacheservice.putByteArray(filename, b);
-			 log.debug(cacheservice.entries() + " put to cache service and save it as file: " + filename);
-			 rwl.writeLock().lock();
-			 FileUtils.writeByteArrayToFile(new File(basePath + "/" + filename), b);
-			 
-			 return new StreamSource(is);
-		} catch (MalformedURLException e) {
-			log.error("ERROR: Caused by MalformedURLException, msg: " + e.getMessage());
-			e.printStackTrace();
+			if (href.contains("p_1360230992133")) {
+				href = "http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1360230992133/xml";
+				filename = "clarin.eu_cr1_p_1360230992133.xml";
+			}
+			BufferedReader br = readHref(href);
+			String inputLine;
+			StringBuffer sb = new StringBuffer();
+			while ((inputLine = br.readLine()) != null)
+				sb.append(inputLine);
+			br.close();
+			byte b[] = sb.toString().getBytes(StandardCharsets.UTF_8);
+			InputStream is = new ByteArrayInputStream(b);
+			cacheservice.putByteArray(filename, b);
+			log.debug(cacheservice.entries()
+					+ " put to cache service and save it as file: " + filename);
+			rwl.writeLock().lock();
+			FileUtils.writeByteArrayToFile(new File(basePath + "/" + filename),
+					b);
+
+			return new StreamSource(is);
 		} catch (IOException e) {
 			log.error("ERROR: Caused by IOException, msg: " + e.getMessage());
 			e.printStackTrace();
-		}finally {
-		  rwl.writeLock().unlock(); // Unlock write
+		} finally {
+			rwl.writeLock().unlock(); // Unlock write
 		}
 		return null;
+	}
+	
+	private BufferedReader readHref(String href) throws IOException {
+		BufferedReader br = null;
+		Object oHref = getHrefAsURLorFile(href);
+		if (oHref == null) {
+			log.error("FATAL ERROR '" + href + "' is NULL.");
+		} else if (oHref instanceof URL) {
+			URL url = (URL)oHref;
+			br = new BufferedReader(
+			        new InputStreamReader(url.openStream()));
+		} else if (oHref instanceof File) {
+			File f = (File)oHref;
+			br = new BufferedReader(new FileReader(f));
+		}
+		return br;
+	}
+	
+	private Object getHrefAsURLorFile(String href) {
+		Object o = null;
+		try {
+			o = new URL(href);
+			log.debug(href + " is an URL.");
+		} catch (MalformedURLException e) {
+			log.info("'" + href + "' is NOT URL.");
+		} 
+		
+		if (o == null) {
+			log.debug(href + " is a FILE.");
+			o = new File(href);
+		} 
+			
+		return o;
 	}
 
 	private StreamSource loadFromFile(String filename, File file) {

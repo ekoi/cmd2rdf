@@ -69,8 +69,8 @@ public class XsltTransformer implements IAction{
 			throw new ActionException("xsltSource is null or empty");
 		if (profilesCacheDir == null || profilesCacheDir.isEmpty())
 			throw new ActionException("profilesCacheDir is null or empty");
-		if (registry == null || registry.isEmpty())
-			throw new ActionException("registry is null or empty");
+//		if (registry == null || registry.isEmpty())
+//			throw new ActionException("registry is null or empty");
 	}
 	
 	private void startUpCacheService() {
@@ -135,5 +135,4 @@ public class XsltTransformer implements IAction{
 	public void shutDown() throws ActionException {
 		shutDownCacheService();
 	}
-
 }  
