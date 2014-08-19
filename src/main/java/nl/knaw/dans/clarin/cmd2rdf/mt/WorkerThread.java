@@ -28,7 +28,7 @@ public class WorkerThread implements Runnable {
     
 	public void run() {
     	
-    	log.debug("=== run ===");
+    	log.debug("Run worker for '" + path + "'.");
         try {
 			executeActions(path);
 		} catch (ActionException e) {

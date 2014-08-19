@@ -144,7 +144,7 @@ public class ClarinProfileResolver implements URIResolver {
 			stream = new StreamSource(is);
 			return stream; 
 		} catch (IOException e) {
-			log.error("FATAL ERROR: could not put the profile to the cache. Caused by IOException, msg: " + e.getMessage());
+			log.error("FATAL ERROR: could not put the profile (filename: '" + filename + "') to the cache. Caused by IOException, msg: " + e.getMessage());
 		}  finally {
 		      rwl.readLock().unlock(); //Unlock read
 		}

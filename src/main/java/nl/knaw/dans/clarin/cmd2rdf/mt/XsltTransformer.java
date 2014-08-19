@@ -3,6 +3,7 @@ package nl.knaw.dans.clarin.cmd2rdf.mt;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.Templates;
@@ -79,6 +80,7 @@ public class XsltTransformer implements IAction{
 			    .setInitialCapacity( 10000 )
 			    .setConcurrencyLevel( 4 )
 			    .newCacheService();
+		cacheService.scheduleDisposalEvery(30,TimeUnit.MINUTES);
 	}
 	
 	public Object execute(String p,Object o) throws ActionException {
@@ -87,6 +89,7 @@ public class XsltTransformer implements IAction{
 		// prepare input
 		if (o instanceof File) {
 			File file = (File)o;
+			log.debug("Converting '" + file.getAbsolutePath() + "'." );
 			input = new StreamSource(file);
 		} else if (o instanceof Node) {
 			Node node = (Node)o;
@@ -94,7 +97,7 @@ public class XsltTransformer implements IAction{
 		} else
 			throw new ActionException("Unknown input ("+p+", "+o+")");
 		try {
-			//log.debug("Converting '" + file.getAbsolutePath() + "' with base is '" + baseURI + "'" );
+			
 			URIResolver resolver = (URIResolver) new ClarinProfileResolver(profilesCacheDir, registry, cacheService);
 			Transformer transformer = cachedXSLT.newTransformer();	
 			transformer.setURIResolver(resolver);
