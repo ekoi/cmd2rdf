@@ -108,7 +108,7 @@ public class ClarinProfileResolver implements URIResolver {
 		final ReadWriteLock rwl = new ReentrantReadWriteLock();
 		try {
 			if (href.contains("p_1360230992133")) {
-				log.debug(">>>>>>>>>> THIS PART NEED TO REFACTOR");;
+				log.debug(">>>>>>>>>> THIS PART BAD!!!");;
 				href = "http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1360230992133/xml";
 				filename = "clarin.eu_cr1_p_1360230992133.xml";
 			}
