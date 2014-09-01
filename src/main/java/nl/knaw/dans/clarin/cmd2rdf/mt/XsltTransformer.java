@@ -44,14 +44,17 @@ public class XsltTransformer implements IAction{
 	private Map<String, String> params;
 		
 	public XsltTransformer(){
-		
+	}
+	public XsltTransformer(CacheService<Object, Object> cacheService){
+		XsltTransformer.cacheService = cacheService;
+		log.debug("++++++++++++XsltTransformer.cacheService.entries: " + XsltTransformer.cacheService.entries());
 	}
 	
 	public void startUp(Map<String, String> vars)
 			throws ActionException {
 		params = vars;
 		checkRequiredVariables();
-		startUpCacheService();
+		//startUpCacheService();
 		TransformerFactory transFact = new net.sf.saxon.TransformerFactoryImpl();
 		Source src = new StreamSource(xsltSource);
 		try {
@@ -81,7 +84,6 @@ public class XsltTransformer implements IAction{
 			    .setConcurrencyLevel( 4 )
 			    .newCacheService();
 		cacheService.scheduleDisposalEvery(30,TimeUnit.MINUTES);
-		log.debug("############################### STARTUP CACHE SERVICE");
 	}
 	
 	public Object execute(String p,Object o) throws ActionException {
@@ -125,7 +127,6 @@ public class XsltTransformer implements IAction{
     }     
 	
 	public void shutDownCacheService() {
-		log.debug("--------------------------------- SHUTDOWN CACHE SERVICE");
 		cacheService.clear();
         try {
 			cacheService.close();
@@ -135,6 +136,6 @@ public class XsltTransformer implements IAction{
 	}
 
 	public void shutDown() throws ActionException {
-		shutDownCacheService();
+		//shutDownCacheService();
 	}
 }  

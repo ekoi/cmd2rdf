@@ -6,6 +6,8 @@ package nl.knaw.dans.clarin.cmd2rdf.batch;
  */
 
 import java.beans.IntrospectionException;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,6 +25,8 @@ import nl.knaw.dans.clarin.cmd2rdf.mt.WorkerThread;
 import nl.knaw.dans.clarin.cmd2rdf.store.db.ChecksumDb;
 import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
+import org.apache.directmemory.DirectMemory;
+import org.apache.directmemory.cache.CacheService;
 import org.easybatch.core.api.AbstractRecordProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +35,12 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 	private final Pattern pattern = Pattern.compile("\\{(.*?)\\}");
 	private static final String URL_DB = "urlDB";
 	private static final Map<String, String> GLOBAL_VARS = new HashMap<String, String>();
+	private static final CacheService<Object, Object> cacheService = new DirectMemory<Object, Object>()
+		    .setNumberOfBuffers( 75 )
+		    .setSize( 1000000 )
+		    .setInitialCapacity( 10000 )
+		    .setConcurrencyLevel( 4 )
+		    .newCacheService();
 	
 
 	public void processRecord(Jobs job)
@@ -71,7 +82,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		log.debug("Execute prepare actions.");
 		List<IAction> actions = new ArrayList<IAction>();
 		for (Action act : list) {
-			IAction clazzAction = startUpAction(act);				
+			IAction clazzAction = startUpAction(null, act);				
 			actions.add(clazzAction);
 		}
 		for(IAction action : actions) {
@@ -87,6 +98,8 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			IllegalAccessException, NoSuchFieldException,
 			NoSuchMethodException, InvocationTargetException, ActionException {
 		log.debug("Execute records.");	
+		
+		cacheService.scheduleDisposalEvery(30,TimeUnit.MINUTES);
 		for(Record r:records) {
 			List<String> paths = null;
 			if (r.xmlSource.contains(URL_DB)) {
@@ -99,7 +112,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			List<IAction> actions = new ArrayList<IAction>();
 			List<Action> list = r.actions;
 			for (Action act : list) {
-				IAction clazzAction = startUpAction(act);				
+				IAction clazzAction = startUpAction(cacheService, act);				
 				actions.add(clazzAction);
 			}
 			if (r.nThreads>1) 
@@ -115,7 +128,12 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 				action.shutDown();
 			}
 		}
-			
+		cacheService.clear();
+        try {
+			cacheService.close();
+		} catch (IOException e) {
+			log.error("ERROR caused by IOException, msg:  " + e.getMessage());
+		}	
 	}
 	private void doMultithreadingAction(Record r, List<String> paths,
 			List<IAction> actions) {
@@ -139,7 +157,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		log.debug("Execute cleanup part.");	
 		List<IAction> actions = new ArrayList<IAction>();
 		for (Action act : list) {
-			IAction clazzAction = startUpAction(act);				
+			IAction clazzAction = startUpAction(null, act);				
 			actions.add(clazzAction);
 		}
 		for(IAction action : actions) {
@@ -151,15 +169,30 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 	}
 
 	
-	private IAction startUpAction(Action act)
+	private IAction startUpAction(CacheService<Object, Object> cacheService, Action act)
 			throws ClassNotFoundException, InstantiationException,
 			IllegalAccessException, NoSuchFieldException,
 			NoSuchMethodException, InvocationTargetException, ActionException {
-		@SuppressWarnings("unchecked")
 		Class<IAction> clazz = (Class<IAction>) Class.forName(act.clazz.name);
-		IAction clazzAction = clazz.newInstance();
-		clazzAction.startUp(Misc.mergeVariables(JobProcessor.GLOBAL_VARS,act.clazz.property));
-		return clazzAction;
+		Constructor[] constructors = clazz.getConstructors(); 
+		for (Constructor c:constructors) {
+			Class[] parameterTypes = c.getParameterTypes();
+			System.out.println(parameterTypes.length);
+		}
+		if (cacheService == null || constructors.length == 1) {
+			@SuppressWarnings("unchecked")
+			//Class<IAction> clazz = (Class<IAction>) Class.forName(act.clazz.name);
+			IAction clazzAction = clazz.newInstance();
+			clazzAction.startUp(Misc.mergeVariables(JobProcessor.GLOBAL_VARS,act.clazz.property));
+			return clazzAction;
+		} else {
+			log.debug("USING CACHE SERVICE - hashcode: " + cacheService.hashCode() + " ENTRIES: " + cacheService.entries());
+			Constructor<IAction> ctor = clazz.getDeclaredConstructor(CacheService.class);
+		    ctor.setAccessible(true);
+		    IAction clazzAction = ctor.newInstance(cacheService);
+			clazzAction.startUp(Misc.mergeVariables(JobProcessor.GLOBAL_VARS,act.clazz.property));
+			return clazzAction;
+		}
 	}
 
 	private String subtituteGlobalValue(String pVal) {

@@ -125,6 +125,7 @@ private boolean deleteRdfFromVirtuoso(String path) {
 private boolean uploadRdfToVirtuoso(String path, Object object)
 		throws ActionException {
 	if (object instanceof Node) {
+		log.debug("Upload '" + path.replace(".xml", ".rdf") + "'.");
 		Node node = (Node)object;
 		DOMSource source = new DOMSource(node);
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -138,7 +139,7 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 			byte[] bytes = bos.toByteArray();
 			Response response = target.request().post(Entity.entity(bytes, MediaType.APPLICATION_OCTET_STREAM));
 			int status = response.getStatus();
-			log.debug("Upload " + (path.replace(".xml", ".rdf")) + " to virtuoso server.\nResponse status: " + status);
+			log.debug("'" + (path.replace(".xml", ".rdf")) + "' is uploaded to virtuoso server.\nResponse status: " + status);
 			if ((status == Response.Status.CREATED.getStatusCode()) || (status == Response.Status.OK.getStatusCode()))
 				return true;
 		} catch (TransformerConfigurationException e) {
