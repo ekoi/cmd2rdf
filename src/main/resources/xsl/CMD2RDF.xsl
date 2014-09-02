@@ -69,18 +69,24 @@
         <xsl:sequence select="if ($datatype=$RDF-XSD-DataTypes) then ($datatype) else ('string')"/>
     </xsl:function>
     
+    <!-- make sure we use a clean ID -->
+    <xsl:function name="cmd:id">
+        <xsl:param name="id"/>
+        <xsl:sequence select="replace($id,'.*(clarin.eu:cr[0-9]+:p_[0-9]+).*','$1')"/>
+    </xsl:function>
+    
     <!-- the registry URL for a profile -->
     <xsl:function name="cmd:ppath">
         <xsl:param name="id"/>
         <xsl:param name="ext"/>
-        <xsl:sequence select="concat($registry,'/rest/registry/profiles/',$id,'/',$ext)"/>
+        <xsl:sequence select="concat($registry,'/rest/registry/profiles/',cmd:id($id),'/',$ext)"/>
     </xsl:function>
 
     <!-- the registry URL for a component -->
     <xsl:function name="cmd:cpath">
         <xsl:param name="id"/>
         <xsl:param name="ext"/>
-        <xsl:sequence select="concat($registry,'/rest/registry/components/',$id,'/',$ext)"/>
+        <xsl:sequence select="concat($registry,'/rest/registry/components/',cmd:id($id),'/',$ext)"/>
     </xsl:function>
     
     <!-- load a profile from the registry -->
