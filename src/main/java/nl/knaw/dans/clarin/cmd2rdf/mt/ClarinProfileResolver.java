@@ -38,13 +38,13 @@ import org.slf4j.LoggerFactory;
 public class ClarinProfileResolver implements URIResolver {
 	private static final Logger log = LoggerFactory.getLogger(ClarinProfileResolver.class);
 	private String basePath;
-	private CacheService<Object, Object> cacheservice;
+	private static CacheService<Object, Object> cacheService;
 	private String registry;
-	public ClarinProfileResolver(String basePath, String registry, CacheService<Object, Object> cacheservice) throws ActionException {
+	public ClarinProfileResolver(String basePath, String registry, CacheService<Object, Object> cacheService) throws ActionException {
 		createCacheTempIfAbsent(basePath);
 		this.registry = registry;
 		this.basePath = basePath;
-		this.cacheservice = cacheservice;
+		ClarinProfileResolver.cacheService = cacheService;
 	}
 
 	private boolean createCacheTempIfAbsent(String basePath) throws ActionException {
@@ -88,9 +88,9 @@ public class ClarinProfileResolver implements URIResolver {
 			file = (File)oHref;
 			filename = file.getAbsolutePath();
 		}
-	    if (cacheservice.retrieveByteArray(filename) != null) {
+	    if (cacheService.retrieveByteArray(filename) != null) {
 	    	log.debug("Using profile from the cache service. Key: " + filename + "\tValue: " + href);
-	    	byte b[] = (byte[]) cacheservice.retrieveByteArray(filename);
+	    	byte b[] = (byte[]) cacheService.retrieveByteArray(filename);
 	    	InputStream is = new ByteArrayInputStream(b);
 	    	 return new StreamSource(is);
 	    } else {
@@ -108,7 +108,7 @@ public class ClarinProfileResolver implements URIResolver {
 		final ReadWriteLock rwl = new ReentrantReadWriteLock();
 		try {
 			if (href.contains("p_1360230992133")) {
-				log.debug(">>>>>>>>>> THIS PART BAD!!!");;
+				log.debug(">>>>>>>>>> THIS PART is BAD!!!");;
 				href = "http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1360230992133/xml";
 				filename = "clarin.eu_cr1_p_1360230992133.xml";
 			}
@@ -120,8 +120,8 @@ public class ClarinProfileResolver implements URIResolver {
 			br.close();
 			byte b[] = sb.toString().getBytes(StandardCharsets.UTF_8);
 			InputStream is = new ByteArrayInputStream(b);
-			cacheservice.putByteArray(filename, b);
-			log.debug(cacheservice.entries()
+			cacheService.putByteArray(filename, b);
+			log.debug(cacheService.entries()
 					+ " put to cache service and save it as file: " + filename);
 			rwl.writeLock().lock();
 			FileUtils.writeByteArrayToFile(new File(basePath + "/" + filename),
@@ -178,7 +178,7 @@ public class ClarinProfileResolver implements URIResolver {
 		
 		try {
 			byte[] bytes = FileUtils.readFileToByteArray(file);
-			cacheservice.putByteArray(filename, bytes);
+			cacheService.putByteArray(filename, bytes);
 			InputStream is = new ByteArrayInputStream(bytes);
 			stream = new StreamSource(is);
 			return stream; 

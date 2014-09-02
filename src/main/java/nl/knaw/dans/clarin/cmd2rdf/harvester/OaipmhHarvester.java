@@ -8,6 +8,8 @@ import java.util.Map;
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.directmemory.cache.CacheService;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentFactory;
@@ -29,12 +31,19 @@ import se.kb.oai.pmh.ResumptionToken;
  */
 public class OaipmhHarvester implements IAction{
 	private static final Logger log = LoggerFactory.getLogger(OaipmhHarvester.class);
+	private static CacheService<Object, Object> cacheService;
 	private static boolean asRoot = true;
 	private String oaipmhBaseURL;
 	private String prefix;
 	private String set;
 	private String outputFile;
 	private Map<String, String> params;
+	
+//	public OaipmhHarvester() {
+//	}
+	public OaipmhHarvester(CacheService<Object, Object> cacheService) {
+		OaipmhHarvester.cacheService = cacheService;
+	}
 	
 	/**
 	 * @param args
@@ -114,7 +123,15 @@ public class OaipmhHarvester implements IAction{
 		return harvest();
 	}
 	public void shutDown() throws ActionException {
-		
+		File file = new File(outputFile);
+		String filename = file.getName();
+		log.debug("Read cache from file and put in the cache service. Filename:  " + filename + "\tFile abspath: " + file.getAbsolutePath());
+		try {
+			byte[] bytes = FileUtils.readFileToByteArray(file);
+			cacheService.putByteArray(filename, bytes);
+		} catch (IOException e) {
+			log.error("FATAL ERROR: could not put the profile (filename: '" + filename + "') to the cache. Caused by IOException, msg: " + e.getMessage());
+		}  
 	}
 	
 	private void checkRequiredVariables() throws ActionException {

@@ -43,8 +43,6 @@ public class XsltTransformer implements IAction{
 	private String registry;
 	private Map<String, String> params;
 		
-	public XsltTransformer(){
-	}
 	public XsltTransformer(CacheService<Object, Object> cacheService){
 		XsltTransformer.cacheService = cacheService;
 		log.debug("++++++++++++XsltTransformer.cacheService.entries: " + XsltTransformer.cacheService.entries());
@@ -76,15 +74,15 @@ public class XsltTransformer implements IAction{
 //			throw new ActionException("registry is null or empty");
 	}
 	
-	private void startUpCacheService() {
-		cacheService = new DirectMemory<Object, Object>()
-			    .setNumberOfBuffers( 75 )
-			    .setSize( 1000000 )
-			    .setInitialCapacity( 10000 )
-			    .setConcurrencyLevel( 4 )
-			    .newCacheService();
-		cacheService.scheduleDisposalEvery(30,TimeUnit.MINUTES);
-	}
+//	private void startUpCacheService() {
+//		cacheService = new DirectMemory<Object, Object>()
+//			    .setNumberOfBuffers( 75 )
+//			    .setSize( 1000000 )
+//			    .setInitialCapacity( 10000 )
+//			    .setConcurrencyLevel( 4 )
+//			    .newCacheService();
+//		cacheService.scheduleDisposalEvery(30,TimeUnit.MINUTES);
+//	}
 	
 	public Object execute(String p,Object o) throws ActionException {
 		Source input = null;

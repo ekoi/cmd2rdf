@@ -12,9 +12,12 @@ import org.easybatch.core.impl.EasyBatchEngine;
 import org.easybatch.core.impl.EasyBatchEngineBuilder;
 import org.easybatch.xml.XmlRecordMapper;
 import org.easybatch.xml.XmlRecordReader;
+import org.joda.time.Period;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Launcher {
-	
+	private static final Logger log = LoggerFactory.getLogger(Launcher.class);
     public static void main(String[] args) throws Exception {
     	if (args == null || args.length !=1 
     			|| !(new File (args[0]).isFile())
@@ -33,8 +36,13 @@ public class Launcher {
         // Run easy batch engine
         EasyBatchReport easyBatchReport = easyBatchEngine.call();
 
+       
         // Print the batch execution report
-        System.out.println(easyBatchReport);
+        log.info("Start time: " + easyBatchReport.getFormattedStartTime());
+        log.info("End time: "+ easyBatchReport.getFormattedEndTime());
+        Period p = new Period(easyBatchReport.getBatchDuration());
+        log.info("Duration: " + p.getDays() + " days, " + p.getHours() + " hours, " 
+        		+ p.getMinutes() + " minutes, " + p.getSeconds() + " seconds, " + p.getMillis() + " ms.");
 
     }
 
