@@ -54,6 +54,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		doPrepare(job.getPrepare().actions);
 		doProcessRecord(job.records);
 		doCleanup(job.getCleanup().actions);
+		closeCacheService();	
 	}
 	private void setupGlolbalConfiguration(Jobs job)
 			throws IntrospectionException, 
@@ -134,12 +135,14 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 				action.shutDown();
 			}
 		}
+	}
+	private void closeCacheService() {
 		cacheService.clear();
         try {
 			cacheService.close();
 		} catch (IOException e) {
 			log.error("ERROR caused by IOException, msg:  " + e.getMessage());
-		}	
+		}
 	}
 	private void fillInCacheService() {
 		String profilesCacheDir = GLOBAL_VARS.get("profilesCacheDir");
