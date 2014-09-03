@@ -3,7 +3,6 @@ package nl.knaw.dans.clarin.cmd2rdf.mt;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.Templates;
@@ -18,7 +17,6 @@ import javax.xml.transform.stream.StreamSource;
 
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 
-import org.apache.directmemory.DirectMemory;
 import org.apache.directmemory.cache.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
