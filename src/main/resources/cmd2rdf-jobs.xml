@@ -25,7 +25,7 @@
                     </properties>
                 </class>
             </action>
-            <!--action name="fetch">
+            <action name="fetch">
                 <class name="nl.knaw.dans.clarin.cmd2rdf.harvester.OaipmhHarvester">
                     <properties>
                         <property name="oaipmhBaseURL">https://openskos.meertens.knaw.nl/oai-pmh</property>
@@ -34,7 +34,7 @@
                         <property name="outputFile">{harvestedProfilesDir}/meertens-VLO-orgs.rdf</property>
                     </properties>
                 </class>
-            </action -->
+            </action>
             <action>  
                 <class name="nl.knaw.dans.clarin.cmd2rdf.store.db.MD5ChecksumDBAction">
                     <properties>
@@ -61,7 +61,7 @@
                     <class name="nl.knaw.dans.clarin.cmd2rdf.mt.XsltTransformer">
                         <properties>
                             <property name="xsltSource">{xsltSourceDir}/addOrganisationEntity.xsl</property>
-                            <property name="vloOrgsParam">{homedir}/harvester/meertens-VLO-orgs.rdf</property>
+                            <property name="VLO-orgs">{homedir}/harvester/meertens-VLO-orgs.rdf</property>
                         </properties>
                     </class>
                 </action>
@@ -73,6 +73,7 @@
                             <property name="serverURL">http://localhost:8000/sparql-graph-crud-auth?</property>
                             <property name="username">dba</property>
                             <property name="password">dba</property>
+                            <property name="action">POST</property>
                         </properties>
                     </class>
                 </action>
@@ -87,17 +88,18 @@
                 </action>
             </actions>
         </record>
-        <record filter="DELETE" xmlSource="$urlDB" >
+        <record filter="DELETE" xmlSource="{urlDB}" >
             <actions>
                 <action>
-                    <class name="nl.knaw.dans.clarin.cmd2rdf.store.virtuoso.DeleteAction">
+                    <class name="nl.knaw.dans.clarin.cmd2rdf.store.VirtuosoClient">
                         <!-- DELETE the Virtuoso named graph for removed CMDI records -->
                         <properties>
-                            <property name="replacedPrefixBaseURI">/Users/akmi/Dropbox/DANS/IN_PROGRESS/CMDI2RDF-Workspace/data/cmd-xml</property>
+                            <property name="replacedPrefixBaseURI">{xmlSourceDir}</property>
                             <property name="prefixBaseURI">http://localhost:8888/DAV</property>
                             <property name="serverURL">http://localhost:8000/sparql-graph-crud-auth?</property>
                             <property name="username">dba</property>
                             <property name="password">dba</property>
+                            <property name="action">DELETE</property>
                         </properties>
                     </class>
                 </action>
