@@ -384,7 +384,7 @@ public class ChecksumDb {
             }
             writeLog(t, nRecords, totalhashingtime,
 					totaldatabaseprocessingtime);
-            
+            totalDbProcessingTime+=totaldatabaseprocessingtime;
         } catch (SQLException e) {
         	log.error("ERROR checkAndstore: " + e.getMessage());
         } 
@@ -426,7 +426,7 @@ public class ChecksumDb {
             for (File file : files) {
             	nRecords++;
             	long a = System.currentTimeMillis();
-            	String hash = MD5.asHex(MD5.getHash(file));
+            	String hash = generateFastMD5Checksum(file);
             	//String hash = generateApacheMD5Checksum(file);
         		totalhashingtime += (System.currentTimeMillis()-a);
         		String path = file.getAbsolutePath();
@@ -486,6 +486,7 @@ public class ChecksumDb {
 //            conn.commit();
             writeLog(t, nRecords, totalhashingtime,
 					totaldatabaseprocessingtime);
+            totalDbProcessingTime+=totaldatabaseprocessingtime;
         } catch (SQLException e) {
         	log.error("ERROR checkAndstore: " + e.getMessage());
         } 
@@ -496,7 +497,6 @@ public class ChecksumDb {
 		 ps.executeBatch();
 		 conn.commit();
 		 long dbprocessingtime = (System.currentTimeMillis() - t);
-		 totalDbProcessingTime+=dbprocessingtime;
 		 log.debug(msg + " is done in " + dbprocessingtime + " milliseconds.");
 		 log.debug("Total number of committed records: " + nRecs);
 		return dbprocessingtime;

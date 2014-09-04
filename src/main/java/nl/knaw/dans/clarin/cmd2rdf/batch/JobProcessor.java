@@ -6,10 +6,8 @@ package nl.knaw.dans.clarin.cmd2rdf.batch;
  */
 
 import java.beans.IntrospectionException;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -20,12 +18,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.xml.transform.stream.StreamSource;
 
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
@@ -137,6 +131,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		}
 	}
 	private void closeCacheService() {
+		log.debug("closeCacheService: CLOSE CacheService. It contains " + cacheService.entries() + " items.");
 		cacheService.clear();
         try {
 			cacheService.close();
@@ -145,16 +140,21 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		}
 	}
 	private void fillInCacheService() {
+		
 		String profilesCacheDir = GLOBAL_VARS.get("profilesCacheDir");
 		 Collection<File> profiles = FileUtils.listFiles(new File(profilesCacheDir),new String[] {"xml"}, true);
+		 int i = 0;
 		 for (File profile:profiles) {
-			 loadFromFile(profile);
+			 i++;
+			 log.debug("i: " + i + " filename: " + profile.getName());
+			 loadFromFile(profile.getName(), profile);
 		 }
+		 
 	}
 	private void initiateCacheService() {
 		 cacheService = new DirectMemory<Object, Object>()
-				    .setNumberOfBuffers( 75 )
-				    .setSize( 1000000 )
+				    .setNumberOfBuffers( 100 )
+				    .setSize( 15000000 )
 				    .setInitialCapacity( 10000 )
 				    .setConcurrencyLevel( 4 )
 				    .newCacheService();
@@ -163,15 +163,16 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		 
 	}
 	
-	private void loadFromFile(File file) {
-		String filename = file.getName();
-		log.debug("Read cache from file and put in the cache service. Filename:  " + filename + "\tFile abspath: " + file.getAbsolutePath());
+	private void loadFromFile(String key, File file) {
+		log.debug("Load " + key + " to Cache Service. It contains " + cacheService.entries() + " items.");
+		log.debug("Read cache from file and put in the cache service. Key:  " + key + "\tFile abspath: " + file.getAbsolutePath());
 		try {
 			byte[] bytes = FileUtils.readFileToByteArray(file);
-			cacheService.putByteArray(filename, bytes);
+			cacheService.putByteArray(key, bytes);
 		} catch (IOException e) {
-			log.error("FATAL ERROR: could not put the profile (filename: '" + filename + "') to the cache. Caused by IOException, msg: " + e.getMessage());
+			log.error("FATAL ERROR: could not put the profile (key: '" + key + "') to the cache. Caused by IOException, msg: " + e.getMessage());
 		}  
+		log.debug("loadFromFile: Adding new item to CacheService. Now it contains " + cacheService.entries() + " items.");
 	} 
 	private void doMultithreadingAction(Record r, List<String> paths,
 			List<IAction> actions) {

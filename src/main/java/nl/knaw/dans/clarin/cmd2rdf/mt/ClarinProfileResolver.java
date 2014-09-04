@@ -6,7 +6,6 @@ package nl.knaw.dans.clarin.cmd2rdf.mt;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -88,6 +87,8 @@ public class ClarinProfileResolver implements URIResolver {
 			file = (File)oHref;
 			filename = file.getAbsolutePath();
 		}
+		log.debug("resolve: CacheService contains " + cacheService.entries() + " items.");
+		System.out.println("===== Filename: " + filename);
 	    if (cacheService.retrieveByteArray(filename) != null) {
 	    	log.debug("Using profile from the cache service. Key: " + filename + "\tValue: " + href);
 	    	byte b[] = (byte[]) cacheService.retrieveByteArray(filename);
@@ -133,6 +134,7 @@ public class ClarinProfileResolver implements URIResolver {
 			e.printStackTrace();
 		} finally {
 			rwl.writeLock().unlock(); // Unlock write
+			log.debug("fetchAndWriteToCache: Adding new item to CacheService. Now it contains " + cacheService.entries() + " items.");
 		}
 		return null;
 	}
@@ -179,6 +181,12 @@ public class ClarinProfileResolver implements URIResolver {
 		try {
 			byte[] bytes = FileUtils.readFileToByteArray(file);
 			cacheService.putByteArray(filename, bytes);
+//			Map<Object, Pointer<Object>> map = cacheService.getMap();
+//			Set<Object> set = map.keySet();
+//			int x=0;
+//			for (Iterator<Object> i= set.iterator(); i.hasNext();) {
+//				log.debug("###[ "+ x++ + "]: " + i.next());
+//			}
 			InputStream is = new ByteArrayInputStream(bytes);
 			stream = new StreamSource(is);
 			return stream; 
@@ -186,6 +194,7 @@ public class ClarinProfileResolver implements URIResolver {
 			log.error("FATAL ERROR: could not put the profile (filename: '" + filename + "') to the cache. Caused by IOException, msg: " + e.getMessage());
 		}  finally {
 		      rwl.readLock().unlock(); //Unlock read
+		      log.debug("loadFromFile: Adding new item to CacheService. Now it contains " + cacheService.entries() + " items.");
 		}
 		return stream;
 	}

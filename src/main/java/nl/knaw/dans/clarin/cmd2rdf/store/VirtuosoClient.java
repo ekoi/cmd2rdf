@@ -3,6 +3,8 @@ package nl.knaw.dans.clarin.cmd2rdf.store;
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.client.Client;
@@ -37,7 +39,7 @@ public class VirtuosoClient implements IAction{
 	private static final String NAMED_GRAPH_IRI = "graph-uri";
 	private static final Logger log = LoggerFactory.getLogger(VirtuosoClient.class);
 	private Client client;
-	private String replacedPrefixBaseURI;
+	private List<String> replacedPrefixBaseURI = new ArrayList<String>();
 	private String prefixBaseURI;
 	private String serverURL;
 	private String username;
@@ -50,14 +52,14 @@ public class VirtuosoClient implements IAction{
 
 	public void startUp(Map<String, String> vars)
 			throws ActionException {
-		replacedPrefixBaseURI = vars.get("replacedPrefixBaseURI");
+		String replacedPrefixBaseURIVar = vars.get("replacedPrefixBaseURI");
 		prefixBaseURI = vars.get("prefixBaseURI");
 		serverURL = vars.get("serverURL");
 		username = vars.get("username");
 		password = vars.get("password");
 		String action = vars.get("action");
 		
-		if (replacedPrefixBaseURI == null || replacedPrefixBaseURI.isEmpty())
+		if (replacedPrefixBaseURIVar == null || replacedPrefixBaseURIVar.isEmpty())
 			throw new ActionException("replacedPrefixBaseURI is null or empty");
 		if (prefixBaseURI == null || prefixBaseURI.isEmpty())
 			throw new ActionException("prefixBaseURI is null or empty");
@@ -69,6 +71,12 @@ public class VirtuosoClient implements IAction{
 			throw new ActionException("password is null or empty");
 		if (action == null || action.isEmpty())
 			throw new ActionException("action is null or empty");
+		
+		String replacedPrefixBaseURIVars[] = replacedPrefixBaseURIVar.split(",");
+		for (String s:replacedPrefixBaseURIVars) {
+			if (!s.trim().isEmpty())
+				replacedPrefixBaseURI.add(s);
+		}
 		
 		act = Misc.convertToActionStatus(action);
 	
@@ -103,9 +111,10 @@ public class VirtuosoClient implements IAction{
 	}
 
 private boolean deleteRdfFromVirtuoso(String path) {
-	String gIRI = path.replace(".xml", ".rdf").replace(this.replacedPrefixBaseURI, this.prefixBaseURI).replaceAll(" ", "_");
+	
 	UriBuilder uriBuilder;
 	try {
+		String gIRI = getGIRI(path);
 		uriBuilder = UriBuilder.fromUri(new URI(serverURL));
 		uriBuilder.queryParam(NAMED_GRAPH_IRI, gIRI);
 		WebTarget target = client.target(uriBuilder.build());
@@ -117,9 +126,25 @@ private boolean deleteRdfFromVirtuoso(String path) {
 	} catch (URISyntaxException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
+	} catch (ActionException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
 	}
 	
 	return false;
+}
+
+private String getGIRI(String path) throws ActionException {
+	String gIRI = null;
+	for (String s:replacedPrefixBaseURI) {
+		if (path.startsWith(s)) {
+			gIRI = path.replace(s, this.prefixBaseURI).replace(".xml", ".rdf").replaceAll(" ", "_");
+			break;
+		}
+	}
+	if (gIRI==null)
+		throw new ActionException("gIRI ERROR: " + path + " is not found as prefix in " + replacedPrefixBaseURI);
+	return gIRI;
 }
 
 private boolean uploadRdfToVirtuoso(String path, Object object)
@@ -132,7 +157,7 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 		StreamResult result = new StreamResult(bos);
 		try {
 			TransformerFactory.newInstance().newTransformer().transform(source,result);
-			String gIRI = path.replace(".xml", ".rdf").replace(this.replacedPrefixBaseURI, this.prefixBaseURI).replaceAll(" ", "_");
+			String gIRI = getGIRI(path);
 			UriBuilder uriBuilder = UriBuilder.fromUri(new URI(serverURL));
 			uriBuilder.queryParam(NAMED_GRAPH_IRI, gIRI);
 			WebTarget target = client.target(uriBuilder.build());

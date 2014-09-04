@@ -7,9 +7,6 @@ package nl.knaw.dans.clarin.cmd2rdf.batch;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ResourceBundle;
-import java.util.logging.Handler;
-import java.util.logging.Level;
 
 import org.easybatch.core.api.EasyBatchReport;
 import org.easybatch.core.impl.EasyBatchEngine;
