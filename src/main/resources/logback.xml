@@ -1,5 +1,8 @@
 <configuration>
-
+	<contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+<!--         reset all previous level configurations of all j.u.l. loggers -->
+        <resetJUL>true</resetJUL>
+    </contextListener> 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <!-- encoders are assigned the type
      ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
@@ -22,8 +25,14 @@
             <pattern>%d{HH:mm:ss.SSS}  %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
         </encoder>
     </appender>
-
-    <root level="debug" additivity="false">
+    
+ 
+	<logger name="javax.xml.bind" level="DEBUG"/>
+	<logger name="org.easybatch.core.impl" level="INFO"/>
+	<logger name="nl.knaw.dans.clarin" level="DEBUG"/>
+	<logger name="org.apache.directmemory" level="ERROR"/>
+	
+    <root level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>
