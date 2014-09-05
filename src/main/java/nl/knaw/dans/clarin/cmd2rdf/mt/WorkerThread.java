@@ -18,6 +18,7 @@ public class WorkerThread implements Runnable {
 	private static final Logger log = LoggerFactory.getLogger(WorkerThread.class);
     private String path;
 	private List<IAction> actions;
+	private static int n;
 	
 	
 
@@ -40,7 +41,8 @@ public class WorkerThread implements Runnable {
     private void executeActions(String path) throws ActionException {
 			File file = new File(path);
 			if (file.exists()) {
-				log.debug(file.getName() + " has size of " + file.length() + " bytes (" + (file.length()/1024) + " MB).");
+				n++;
+				log.debug("Number of file [" + n + "]: " + file.getName() + " has size of " + file.length() + " bytes (" + (file.length()/1024) + " MB).");
 				Object object = file;
 				//Do conversion
 				for(IAction action : actions) {

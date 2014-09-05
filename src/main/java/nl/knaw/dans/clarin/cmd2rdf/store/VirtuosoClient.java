@@ -45,6 +45,7 @@ public class VirtuosoClient implements IAction{
 	private String username;
 	private String password;
 	private ActionStatus act;
+	private static int n;
 	
 
 	public VirtuosoClient(){
@@ -121,8 +122,11 @@ private boolean deleteRdfFromVirtuoso(String path) {
 		Response response = target.request().delete();
 		int status = response.getStatus();
 		log.debug("Upload " + (path.replace(".xml", ".rdf")) + " to virtuoso server.\nResponse status: " + status);
-		if ((status == Response.Status.CREATED.getStatusCode()) || (status == Response.Status.OK.getStatusCode()))
+		if ((status == Response.Status.CREATED.getStatusCode()) || (status == Response.Status.OK.getStatusCode())){
+			n++;
+			log.debug("[" + n + "] is uploaded.");
 			return true;	
+		}
 	} catch (URISyntaxException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();

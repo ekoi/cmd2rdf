@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
@@ -80,17 +81,17 @@ public class MD5ChecksumDBAction implements IAction {
 				allFiles.addAll(files);
 			}
 		}
-//		List<File> smallFiles = new ArrayList<File>();
-//		for (File f:allFiles) {
-//			if ((f.length()/1048576)<1)
-//				smallFiles.add(f);
-//		}
+		List<File> smallFiles = new ArrayList<File>();
+		for (File f:allFiles) {
+			if ((f.length()/1048576)<1)
+				smallFiles.add(f);
+		}
 		log.debug("===== Number of files TOTAL FILES : " + allFiles.size());
-//		log.debug("===== Number of files SMALL FILES : " + smallFiles.size());
+		log.debug("===== Number of files SMALL FILES : " + smallFiles.size());
 		try {
 			log.debug("Number of records before process: " + db.getTotalNumberOfRecords());
 			
-			db.process(xmlSourceDir, allFiles);
+			db.process(xmlSourceDir, smallFiles);
 			
 			log.debug("Number of records after process: " + db.getTotalNumberOfRecords());
 			log.debug("Total Query DURATION: " + ChecksumDb.getTotalQueryDuration() + " milliseconds");
