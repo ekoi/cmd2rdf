@@ -46,10 +46,7 @@ public class WorkerThread implements Runnable {
 				Object object = file;
 				//Do conversion
 				for(IAction action : actions) {
-					long start = System.currentTimeMillis();
 					object = action.execute(path,object);
-					long endConv = System.currentTimeMillis();
-					log.info("Duration of Conversion: " + ((endConv-start)) + " milliseconds");
 				}
 			} else {
 				log.error("ERROR: '" + path + "' does not exist.");
