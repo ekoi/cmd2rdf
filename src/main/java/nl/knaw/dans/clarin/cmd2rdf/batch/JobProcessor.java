@@ -146,7 +146,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		 int i = 0;
 		 for (File profile:profiles) {
 			 i++;
-			 log.debug("i: " + i + " filename: " + profile.getName());
+			 //log.debug("i: " + i + " filename: " + profile.getName());
 			 loadFromFile(profile.getName(), profile);
 		 }
 		 
