@@ -56,7 +56,7 @@ public class Launcher {
         log.info("Start time: " + easyBatchReport.getFormattedStartTime());
         log.info("End time: "+ easyBatchReport.getFormattedEndTime());
         Period p = new Period(easyBatchReport.getBatchDuration());
-        log.info("Duration: " + p.getDays() + " days, " + p.getHours() + " hours, " 
+        log.info("Duration: " + p.getHours() + " hours, " 
         		+ p.getMinutes() + " minutes, " + p.getSeconds() + " seconds, " + p.getMillis() + " ms.");
 
     }
