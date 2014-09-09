@@ -124,15 +124,14 @@ private boolean deleteRdfFromVirtuoso(String path) {
 		log.debug("Upload " + (path.replace(".xml", ".rdf")) + " to virtuoso server.\nResponse status: " + status);
 		if ((status == Response.Status.CREATED.getStatusCode()) || (status == Response.Status.OK.getStatusCode())){
 			n++;
-			log.debug("[" + n + "] is uploaded.");
+			log.debug("[" + n + "] is DELETED.");
 			return true;	
 		}
 	} catch (URISyntaxException e) {
-		// TODO Auto-generated catch block
+		log.error("ERROR: URISyntaxException, caused by " + e.getMessage());
 		e.printStackTrace();
 	} catch (ActionException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
+		log.error("ERROR: ActionException, caused by " + e.getMessage());
 	}
 	
 	return false;
@@ -166,11 +165,16 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 			uriBuilder.queryParam(NAMED_GRAPH_IRI, gIRI);
 			WebTarget target = client.target(uriBuilder.build());
 			byte[] bytes = bos.toByteArray();
+			long startUplod = System.currentTimeMillis();
 			Response response = target.request().post(Entity.entity(bytes, MediaType.APPLICATION_OCTET_STREAM));
 			int status = response.getStatus();
 			log.debug("'" + (path.replace(".xml", ".rdf")) + "' is uploaded to virtuoso server.\nResponse status: " + status);
-			if ((status == Response.Status.CREATED.getStatusCode()) || (status == Response.Status.OK.getStatusCode()))
-				return true;
+			if ((status == Response.Status.CREATED.getStatusCode()) || (status == Response.Status.OK.getStatusCode())){
+				n++;
+				log.debug("[" + n + "] is CREATED. Duration: " + (System.currentTimeMillis() - startUplod) + " milliseconds.");
+				return true;	
+			}
+			//client.close();
 		} catch (TransformerConfigurationException e) {
 			log.error("ERROR: TransformerConfigurationException, caused by " + e.getMessage());
 		} catch (TransformerException e) {
@@ -188,7 +192,5 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 	
 
 	public void shutDown() throws ActionException {
-		// TODO Auto-generated method stub
-		
 	}
 }
