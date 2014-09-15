@@ -8,6 +8,7 @@ package nl.knaw.dans.clarin.cmd2rdf.util;
  *
  */
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -78,6 +79,16 @@ public class Misc {
 					"ERROR: IllegalArgumentException, no enum constant of '"
 							+ words + "'.");
 		}
+	}
+	
+	public static <T> List<List<T>> split(List<T> list, final int length) {
+		List<List<T>> parts = new ArrayList<List<T>>();
+		final int size = list.size();
+		for (int i = 0; i < size; i += length) {
+			parts.add(new ArrayList<T>(list.subList(i,
+					Math.min(size, i + length))));
+		}
+		return parts;
 	}
 	
 //	public static int safeLongToInt(long l) {

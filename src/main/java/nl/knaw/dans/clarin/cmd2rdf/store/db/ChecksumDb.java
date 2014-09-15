@@ -490,7 +490,6 @@ public class ChecksumDb {
 		psInsert.setString(1, path);
 		psInsert.setString(2, hash);
 		psInsert.setLong(3, size);
-		System.out.println(size);
 		psInsert.setString(4, ActionStatus.NEW.name());
 		psInsert.addBatch();
 	}

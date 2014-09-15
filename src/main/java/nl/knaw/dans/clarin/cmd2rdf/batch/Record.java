@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 @SuppressWarnings("restriction")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Record implements Runnable{
+public class Record{
 	
 	@XmlAttribute(required = true)
 	String filter;
@@ -40,12 +40,5 @@ public class Record implements Runnable{
 	@XmlElement(name="action")
 	List<Action> actions;
 
-	public void run() {
-		if (actions == null)
-		System.out.println("_______________ NULL NULL _______________");
-		else {
-			System.out.println("_______________ HELLO RUN _______________");
-		}
-	}
 }
 

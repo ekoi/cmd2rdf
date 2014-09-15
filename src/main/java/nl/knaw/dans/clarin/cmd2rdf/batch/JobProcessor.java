@@ -142,43 +142,61 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		}
 	}
 	
+	
 	private void doCallableAction(Record r, List<String> paths,
 			List<IAction> actions) {
 		log.debug("Multithreading is on, number of threads: " + r.nThreads);
-		ExecutorService executor = Executors.newFixedThreadPool(r.nThreads);
-		log.info("Number of processed records files: " + paths.size() );
+		int n=0;
 		int i=0;
-		List<Future<String>> futures = new ArrayList<Future<String>>();
-		for (String path : paths) {
-			i++;
-			 Callable<String> worker = new WorkerCallable(path, actions, i);
-		     Future<String> future = executor.submit(worker);
-		     futures.add(future);
-		     try {
-				System.out.println(future.get());
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		List<List<String>> paths2 = Misc.split(paths, r.nThreads);
+		int a = paths.size();
+		int b = paths2.size();
+		int c = paths2.get(paths2.size()-1).size();
+		int d = ((b-1)*r.nThreads) + c;
+		log.debug("==============================================================");
+		log.debug("Numbers of files: " + a);
+		log.debug("Numbers op splitsing: " + b);
+		log.debug("Last index: " + c);
+		log.debug("a: " + a + "\td: " + d);
+		log.debug("==============================================================");
+		for (List<String> pth : paths2) {
+			n++;
+			ExecutorService executor = Executors.newFixedThreadPool(r.nThreads);
+			log.info(">>>>>>>>>>>>>[" + n + "]Number of processed records files: " + pth.size() );
+			List<Future<String>> futures = new ArrayList<Future<String>>();
+			for (String p : pth) {
+				i++;
+				 Callable<String> worker = new WorkerCallable(p, actions, i);
+			     Future<String> future = executor.submit(worker);
+			     futures.add(future);
+			     try {
+					log.debug(future.get());
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
-		}
-		log.debug("============ FUTURE SIZE: " + futures.size() + "\tPATHS SIZE: " + paths.size() );
-		for (Future<String> future:futures) {
-			try {
-				log.debug("### " + future.get() );
-			} catch (InterruptedException   e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			log.debug("============ FUTURE SIZE: " + futures.size() + "\tPATHS SIZE: " + paths.size() );
+			for (Future<String> future:futures) {
+				try {
+					log.debug("### " + future.get() );
+				} catch (InterruptedException   e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
+			executor.shutdown();
+			while (!executor.isTerminated()) {}
+			log.info("===Finished "+ pth.size() + " threads===");
+			a=a-pth.size();
+			log.info("REMAINS: " + a);
 		}
-		executor.shutdown();
-		while (!executor.isTerminated()) {}
-		log.info("===Finished all threads===");
 	}
 	
 	private void doMultithreadingAction(Record r, List<String> paths,
@@ -268,15 +286,15 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 	}
 	
 	private void loadFromFile(String key, File file) {
-		log.debug("Load " + key + " to Cache Service. It contains " + cacheService.entries() + " items.");
-		log.debug("Read cache from file and put in the cache service. Key:  " + key + "\tFile abspath: " + file.getAbsolutePath());
+		//log.debug("Load " + key + " to Cache Service. It contains " + cacheService.entries() + " items.");
+		//log.debug("Read cache from file and put in the cache service. Key:  " + key + "\tFile abspath: " + file.getAbsolutePath());
 		try {
 			byte[] bytes = FileUtils.readFileToByteArray(file);
 			cacheService.putByteArray(key, bytes);
 		} catch (IOException e) {
 			log.error("FATAL ERROR: could not put the profile (key: '" + key + "') to the cache. Caused by IOException, msg: " + e.getMessage());
 		}  
-		log.debug("loadFromFile: Adding new item to CacheService. Now it contains " + cacheService.entries() + " items.");
+		//log.debug("loadFromFile: Adding new item to CacheService. Now it contains " + cacheService.entries() + " items.");
 	} 
 	
 	
