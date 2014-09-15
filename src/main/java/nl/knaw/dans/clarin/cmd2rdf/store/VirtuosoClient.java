@@ -24,6 +24,7 @@ import javax.xml.transform.stream.StreamResult;
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
 import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
+import nl.knaw.dans.clarin.cmd2rdf.util.BytesConverter;
 import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
@@ -93,9 +94,9 @@ public class VirtuosoClient implements IAction{
 //		ClientConfig clientConfig = new ClientConfig();
 //		clientConfig.connectorProvider(new ApacheConnectorProvider());
 //		client = ClientBuilder.newClient(clientConfig);
-		client = ClientBuilder.newClient();
-		HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.digest(username, password);
-		client.register(authFeature);
+//		client = ClientBuilder.newClient();
+//		HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.digest(username, password);
+//		client.register(authFeature);
 	}
 
 	public Object execute(String path, Object object) throws ActionException {
@@ -126,6 +127,8 @@ private boolean deleteRdfFromVirtuoso(String path) {
 			n++;
 			log.debug("[" + n + "] is DELETED.");
 			return true;	
+		} else {
+			log.error(">>>>>>>>>> ERROR: " + status);
 		}
 	} catch (URISyntaxException e) {
 		log.error("ERROR: URISyntaxException, caused by " + e.getMessage());
@@ -159,13 +162,25 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		StreamResult result = new StreamResult(bos);
 		try {
+			log.debug("START transformation from DOMSource to RD.F");
+			long startTrans = System.currentTimeMillis();
 			TransformerFactory.newInstance().newTransformer().transform(source,result);
+			log.debug("END transformation from DOMSource to RDF. Duration: " + BytesConverter.friendly(System.currentTimeMillis() - startTrans) + " milliseconds.");
+			
+			byte[] bytes = bos.toByteArray();
+			log.debug("BYTES SIZE: " + BytesConverter.friendly(bytes.length));
+			
+			long startUplod = System.currentTimeMillis();
+			
 			String gIRI = getGIRI(path);
 			UriBuilder uriBuilder = UriBuilder.fromUri(new URI(serverURL));
 			uriBuilder.queryParam(NAMED_GRAPH_IRI, gIRI);
+			client = ClientBuilder.newClient();
+			HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.digest(username, password);
+			client.register(authFeature);
+			
 			WebTarget target = client.target(uriBuilder.build());
-			byte[] bytes = bos.toByteArray();
-			long startUplod = System.currentTimeMillis();
+			
 			Response response = target.request().post(Entity.entity(bytes, MediaType.APPLICATION_OCTET_STREAM));
 			int status = response.getStatus();
 			log.debug("'" + (path.replace(".xml", ".rdf")) + "' is uploaded to virtuoso server.\nResponse status: " + status);
@@ -173,8 +188,10 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 				n++;
 				log.debug("[" + n + "] is CREATED. Duration: " + (System.currentTimeMillis() - startUplod) + " milliseconds.");
 				return true;	
+			} else {
+				log.error(">>>>>>>>>> ERROR: " + status);
 			}
-			//client.close();
+			client.close();
 		} catch (TransformerConfigurationException e) {
 			log.error("ERROR: TransformerConfigurationException, caused by " + e.getMessage());
 		} catch (TransformerException e) {
@@ -192,5 +209,11 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 	
 
 	public void shutDown() throws ActionException {
+	}
+	
+	@Override
+	public String name() {
+		
+		return this.getClass().getName();
 	}
 }

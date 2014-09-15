@@ -141,7 +141,7 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
             	  log.debug(sb2.toString());
               }
               sb.setLength(0);
-              System.gc();
+              
               for (int i=0; i<x; i++) {
             	  StringBuffer sww = new StringBuffer("INSERT INTO GRAPH <" + str + "> {\n");
                	  for (int j=0; j<MAX_LINE; j++) {
@@ -184,7 +184,13 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 	return false;
 	}
 	
-
+	@Override
 	public void shutDown() throws ActionException {
+	}
+	
+	@Override
+	public String name() {
+		
+		return this.getClass().getName();
 	}
 }

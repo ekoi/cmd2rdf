@@ -65,4 +65,10 @@ public class MD5ChecksumRecordStatus implements IAction {
 			throw new ActionException("status is null or empty");
 		act = Misc.convertToActionStatus(action);
 	}
+	
+	@Override
+	public String name() {
+		
+		return this.getClass().getName();
+	}
 }

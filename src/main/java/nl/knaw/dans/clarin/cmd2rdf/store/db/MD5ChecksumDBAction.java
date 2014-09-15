@@ -117,4 +117,10 @@ public class MD5ChecksumDBAction implements IAction {
 		else
 			db.closeDbConnection();
 	}
+
+	@Override
+	public String name() {
+		
+		return this.getClass().getName();
+	}
 }

@@ -15,14 +15,18 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
+import nl.knaw.dans.clarin.cmd2rdf.mt.WorkerCallable;
 import nl.knaw.dans.clarin.cmd2rdf.mt.WorkerThread;
 import nl.knaw.dans.clarin.cmd2rdf.store.db.ChecksumDb;
 import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
@@ -106,7 +110,14 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			if (r.xmlSource.contains(URL_DB)) {
 				String urlDB = subtituteGlobalValue(r.xmlSource);
 				ChecksumDb cdb = new ChecksumDb(urlDB);
-		    	paths = cdb.getRecords(Misc.convertToActionStatus(r.filter));
+				if (r.xmlLimitSize != null && r.xmlLimitValue == null)
+					throw new IllegalArgumentException("ERROR: If xmlLimitSize is specified, the xmlLimitValue must be specified.");
+				if (r.xmlLimitValue != null && r.xmlLimitSize == null)
+					throw new IllegalArgumentException("ERROR: If xmlLimitValue is specified, the xmlLimitSize must be specified.");
+		    	if (r.xmlLimitSize != null && r.xmlLimitValue != null)
+				   paths = cdb.getRecords(Misc.convertToActionStatus(r.filter), Misc.convertToActionStatus(r.xmlLimitSize), r.xmlLimitValue);
+		    	else 
+		    		paths = cdb.getRecords(Misc.convertToActionStatus(r.filter));
 		    	cdb.closeDbConnection();
 			}
 			
@@ -116,8 +127,8 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 				IAction clazzAction = startUpAction(act);				
 				actions.add(clazzAction);
 			}
-			if (r.nThreads>1) 
-				doMultithreadingAction(r, paths, actions);
+			if (r.nThreads>0) 
+				doCallableAction(r, paths, actions);
 			else {
 				for(IAction action : actions) {
 					for (String path:paths)
@@ -129,6 +140,99 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 				action.shutDown();
 			}
 		}
+	}
+	
+	private void doCallableAction(Record r, List<String> paths,
+			List<IAction> actions) {
+		log.debug("Multithreading is on, number of threads: " + r.nThreads);
+		ExecutorService executor = Executors.newFixedThreadPool(r.nThreads);
+		log.info("Number of processed records files: " + paths.size() );
+		int i=0;
+		List<Future<String>> futures = new ArrayList<Future<String>>();
+		for (String path : paths) {
+			i++;
+			 Callable<String> worker = new WorkerCallable(path, actions, i);
+		     Future<String> future = executor.submit(worker);
+		     futures.add(future);
+		     try {
+				System.out.println(future.get());
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		log.debug("============ FUTURE SIZE: " + futures.size() + "\tPATHS SIZE: " + paths.size() );
+		for (Future<String> future:futures) {
+			try {
+				log.debug("### " + future.get() );
+			} catch (InterruptedException   e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		executor.shutdown();
+		while (!executor.isTerminated()) {}
+		log.info("===Finished all threads===");
+	}
+	
+	private void doMultithreadingAction(Record r, List<String> paths,
+			List<IAction> actions) {
+		log.debug("Multithreading is on, number of threads: " + r.nThreads);
+		ExecutorService executor = Executors.newFixedThreadPool(r.nThreads);
+		log.info("Number of processed records files: " + paths.size() );
+		int i=0;
+		
+		for (String path : paths) {
+			i++;
+			System.out.println(":::::::::::::::::::: " + i);
+			 Runnable worker = new WorkerThread(path, actions);
+		     Future<?> future = executor.submit(worker, "XXXXXXXXdone: " + i);
+		     try {
+				System.out.println(future.get());
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		executor.shutdown();
+		while (!executor.isTerminated()) {}
+		log.info("===Finished all threads===");
+	}
+	
+	private void doMultithreadingAction2(Record r, List<String> paths,
+			List<IAction> actions) {
+		
+		log.info("Number of processed records files: " + paths.size() );
+		boolean ok = true;
+		int len = paths.size();
+		
+		for (int i=0; i<len; i++) {
+			System.out.println("begin i: " + i);
+			log.debug("Multithreading is on, number of threads: " + r.nThreads);
+			ExecutorService executor = Executors.newFixedThreadPool(r.nThreads);
+			for (int j=0; j<r.nThreads && i<len; j++) {
+				 Runnable worker = new WorkerThread(paths.get(i), actions);
+			     executor.execute(worker);
+			     i++;
+			}
+			executor.shutdown();
+			 
+			while (!executor.isTerminated()) {
+				System.out.println(executor.isTerminated());
+			}
+			System.out.println("end i: " + i);
+			log.info("===Finished " + r.nThreads + " threads===");
+		}
+		log.info("===Finished all threads===");
 	}
 	private void closeCacheService() {
 		log.debug("closeCacheService: CLOSE CacheService. It contains " + cacheService.entries() + " items.");
@@ -174,20 +278,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		}  
 		log.debug("loadFromFile: Adding new item to CacheService. Now it contains " + cacheService.entries() + " items.");
 	} 
-	private void doMultithreadingAction(Record r, List<String> paths,
-			List<IAction> actions) {
-		log.debug("Multithreading is on, number of threads: " + r.nThreads);
-		ExecutorService executor = Executors.newFixedThreadPool(r.nThreads);
-		log.info("Number of processed records files: " + paths.size() );
-		for (String path : paths) {
-			 Runnable worker = new WorkerThread(path, actions);
-		     executor.execute(worker);
-		}
-		executor.shutdown();
-		 
-		while (!executor.isTerminated()) {}
-		log.info("===Finished all threads===");
-	}
+	
 	
 	private void doCleanup(List<Action> list) 
 				throws ClassNotFoundException, InstantiationException, 

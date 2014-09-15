@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 
 import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
+import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
@@ -24,14 +25,14 @@ import com.twmacinta.util.MD5;
 
 public class ChecksumDb {
 	private static final String TABLE_NAME = "CMD_MD5";
-	private static final String UPDATE_PREPARED_STATEMENT = "UPDATE " + TABLE_NAME + " SET md5 = ?, status=? WHERE path = ?";
+	private static final String UPDATE_PREPARED_STATEMENT = "UPDATE " + TABLE_NAME + " SET md5 = ?, size=?, status=? WHERE path = ?";
 	private static final String SKIP_PREPARED_STATEMENT = "UPDATE " + TABLE_NAME + " SET status=? WHERE path = ?";
-	private static final String INSERT_PREPARED_STATEMENT = "INSERT INTO " + TABLE_NAME + "(path, md5, status) VALUES(?,?,?)";
+	private static final String INSERT_PREPARED_STATEMENT = "INSERT INTO " + TABLE_NAME + "(path, md5, size, status) VALUES(?,?,?,?)";
 	private static final String NEW_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.NEW + "'";
 	private static final String UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.UPDATE + "'";
 	private static final String DELETE_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE status='" + ActionStatus.DELETE + "'";
-	private static final String NEW_OR_UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE status='" 
-													+ ActionStatus.NEW + "' OR status ='" + ActionStatus.UPDATE + "'";
+	private static final String NEW_OR_UPDATED_RECORD_QUERY = "SELECT path FROM " + TABLE_NAME + " WHERE (status='" 
+													+ ActionStatus.NEW + "' OR status ='" + ActionStatus.UPDATE + "')";
 	
 	private static boolean initialdata = false;
 	private static long totalQueryDuration;
@@ -127,7 +128,7 @@ public class ChecksumDb {
 		update(
                 "CREATE TABLE " + TABLE_NAME 
                 + "( id INTEGER IDENTITY, path VARCHAR(" + COL_CHECKSUM_MAX_LENGTH + ") UNIQUE, "
-                + "md5 VARCHAR(" + COL_CHECKSUM_MAX_LENGTH + "), status VARCHAR(" + COL_ACTION_MAX_LENTH + "))");
+                + "md5 VARCHAR(" + COL_CHECKSUM_MAX_LENGTH + "), size BIGINT, status VARCHAR(" + COL_ACTION_MAX_LENTH + "))");
 		update("CREATE INDEX path_idx ON " + TABLE_NAME + "(path)");
         update("CREATE INDEX md5_idx ON " + TABLE_NAME + "(md5)");
         conn.setAutoCommit(false);
@@ -165,85 +166,58 @@ public class ChecksumDb {
     }    
     
     public List<String> getRecords(ActionStatus as) {
-    	List<String> paths = new ArrayList<String>();
-    	try {
-    	
-    	switch (as) {
-	    		case NEW: paths=getRecordsWithStatusNew();
-	    			break;
-	    		case UPDATE: paths = getRecordsWithStatusUpdate();
-	    			break;
-	    		case NEW_UPDATE: paths = getRecordsWithStatusNewOrUpdate();
-	    			break;
-	    		case DELETE: paths = getRecordWithStatusDelete();
-	    			break;
-			default:
-				paths = getRecordsWithStatusNewOrUpdate();
-				break;
-	    	}
-    	}catch (SQLException e) {
-    		e.printStackTrace();
-    	}
-    	return paths;
+		return getRecords(as, null, null);
     }
     
-    private List<String> getRecordWithStatusDelete() throws SQLException {
-    	List<String> paths = new ArrayList<String>();
-    	long t = System.currentTimeMillis();
-        Statement st = conn.createStatement();        
-        ResultSet rs = st.executeQuery(DELETE_RECORD_QUERY);    
-        for (; rs.next(); ) {
-        	String path = rs.getString("path"); 
-        	paths.add(path);
-        }
-        st.close(); 
-        long duration = (System.currentTimeMillis()-t);
-        log.debug("Checksum query NEW_RECORD_QUERY needs " + duration + " milliseconds.");
-    	return paths;
+	public List<String> getRecords(ActionStatus as, ActionStatus xmlLimitSize,
+			String xmlLimitValue) {
+		
+		String sql = "";
+		switch (as) {
+		case NEW:
+			sql = NEW_RECORD_QUERY;
+			break;
+		case UPDATE:
+			sql = UPDATED_RECORD_QUERY;
+			break;
+		case NEW_UPDATE:
+			sql = NEW_OR_UPDATED_RECORD_QUERY;
+			break;
+		case DELETE:
+			sql = DELETE_RECORD_QUERY;
+			break;
+		default:
+			sql = NEW_RECORD_QUERY;
+			break;
+		}
+		if (xmlLimitSize != null && xmlLimitValue != null) {
+			if (ActionStatus.MAXIMUM.equals(xmlLimitSize))
+				sql += " AND size < " + xmlLimitValue;
+			else if (ActionStatus.MINIMUM.equals(xmlLimitSize)) 
+				sql += " AND size >= " + xmlLimitValue;
+		}
+			
+		List<String> paths = new ArrayList<String>();
+		try {
+			paths = getPathsByQuery(sql);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return paths;
 	}
-
-	public List<String> getRecordsWithStatusNew() throws SQLException {
+    
+    private List<String> getPathsByQuery(String query) throws SQLException {
     	List<String> paths = new ArrayList<String>();
-    	long t = System.currentTimeMillis();
         Statement st = conn.createStatement();        
-        ResultSet rs = st.executeQuery(NEW_RECORD_QUERY);    
+        ResultSet rs = st.executeQuery(query);    
         for (; rs.next(); ) {
         	String path = rs.getString("path"); 
         	paths.add(path);
         }
         st.close(); 
-        long duration = (System.currentTimeMillis()-t);
-        log.debug("Checksum query NEW_RECORD_QUERY needs " + duration + " milliseconds.");
     	return paths;
     }
-    public List<String> getRecordsWithStatusUpdate() throws SQLException {
-    	List<String> paths = new ArrayList<String>();
-    	long t = System.currentTimeMillis();
-        Statement st = conn.createStatement();        
-        ResultSet rs = st.executeQuery(UPDATED_RECORD_QUERY);    
-        for (; rs.next(); ) {
-        	String path = rs.getString("path"); 
-        	paths.add(path);
-        }
-        st.close(); 
-        long duration = (System.currentTimeMillis()-t);
-        log.debug("Checksum query UPDATED_RECORD_QUERY needs " + duration + " milliseconds.");
-    	return paths;
-    }
-    public List<String> getRecordsWithStatusNewOrUpdate() throws SQLException {
-    	List<String> paths = new ArrayList<String>();
-    	long t = System.currentTimeMillis();
-        Statement st = conn.createStatement();        
-        ResultSet rs = st.executeQuery(NEW_OR_UPDATED_RECORD_QUERY);    
-        for (; rs.next(); ) {
-        	String path = rs.getString("path"); 
-        	paths.add(path);
-        }
-        st.close(); 
-        long duration = (System.currentTimeMillis()-t);
-        log.debug("Checksum query NEW_OR_UPDATED_RECORD_QUERY needs " + duration + " milliseconds.");
-    	return paths;
-    }
+   
     
     private String getChecksumRecord(String path) throws SQLException {
     	String checksum = null;
@@ -366,7 +340,7 @@ public class ChecksumDb {
         		//String hash = generateApacheMD5Checksum(file);
         		totalhashingtime += (System.currentTimeMillis()-a);
         		nInsert++;
-        		setInsertedRecord(psInsert, hash,  file.getAbsolutePath());
+        		setInsertedRecord(psInsert, hash,  file.getAbsolutePath(), file.length());
             	if (nInsert%10000 ==0) {
                 	 totaldatabaseprocessingtime += commitRecords(
 							psInsert, nInsert, "Inserting");
@@ -409,7 +383,7 @@ public class ChecksumDb {
     }
     
     private void checkAndstore(Collection<File> files) throws IOException {
-    	log.debug("CHECK AND GENERATE MD5 [generateApacheMD5Checksum(file)] for " + files.size() + " files.");
+    	log.debug("CHECK AND GENERATE MD5 [generateFastMD5Checksum(file)] for " + files.size() + " files.");
         try {
         	long t = System.currentTimeMillis();
             log.debug("Generate MD5 Checksum of " + files.size() + " files.");
@@ -433,7 +407,7 @@ public class ChecksumDb {
             	String checksum = getChecksumRecord(path);
             	if (checksum == null) {
             		nInsert++;
-            		setInsertedRecord(psInsert, hash, path);
+					setInsertedRecord(psInsert, hash, path, file.length());
                 	if (nInsert%10000 ==0) {
                     	 totaldatabaseprocessingtime += commitRecords(
 								psInsert, nInsert, "Inserting 10.000");
@@ -443,7 +417,7 @@ public class ChecksumDb {
 	            	if (!checksum.equals(hash)) {
 	            		System.out.println("++++++++++++++++++++++++++++++++++++++ UPDATE " + file.getName());	
 	            			nUpdate++;
-	            			setUpdateRecord(psUpdate, hash, path, ActionStatus.UPDATE);
+	            			setUpdateRecord(psUpdate, hash, file.length(), path, ActionStatus.UPDATE);
 	            			if (nUpdate%10000 ==0) {
 		                    	 totaldatabaseprocessingtime += commitRecords(
 										psUpdate, nUpdate,
@@ -512,18 +486,21 @@ public class ChecksumDb {
 	}
 
 	private void setInsertedRecord(PreparedStatement psInsert, String hash,
-			String path) throws SQLException {
+			String path, long size) throws SQLException {
 		psInsert.setString(1, path);
 		psInsert.setString(2, hash);
-		psInsert.setString(3, ActionStatus.NEW.name());
+		psInsert.setLong(3, size);
+		System.out.println(size);
+		psInsert.setString(4, ActionStatus.NEW.name());
 		psInsert.addBatch();
 	}
 	
-	private void setUpdateRecord(PreparedStatement ps, String hash,
+	private void setUpdateRecord(PreparedStatement ps, String hash, long size, 
 			String path, ActionStatus action) throws SQLException {
 		ps.setString(1, hash);
-		ps.setString(2, action.name());
-		ps.setString(3, path);
+		ps.setLong(2, size);
+		ps.setString(3, action.name());
+		ps.setString(4, path);
 		ps.addBatch();
 	}
 	

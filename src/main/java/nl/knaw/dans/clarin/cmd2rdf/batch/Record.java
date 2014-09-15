@@ -17,20 +17,20 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Record implements Runnable{
 	
-	@XmlAttribute
+	@XmlAttribute(required = true)
 	String filter;
 	
-	@XmlAttribute
+	@XmlAttribute(required = true)
 	int nThreads;
 	
-	@XmlAttribute
+	@XmlAttribute(required = false)
+	String xmlLimitSize;
+	
+	@XmlAttribute(required = false)
+	String xmlLimitValue;
+	
+	@XmlAttribute(required = true)
 	String xmlSource;
-	
-	@XmlAttribute
-	String className;
-	
-	@XmlAttribute
-	String methodToExecute;
 	
 	@XmlElementWrapper(name = "properties")
 	@XmlElement(name="property")

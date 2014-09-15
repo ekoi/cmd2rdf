@@ -175,4 +175,9 @@ public class OaipmhHarvester implements IAction{
 		}
 		return true;
 	}
+
+	@Override
+	public String name() {
+		return this.getClass().getName();
+	}
 }

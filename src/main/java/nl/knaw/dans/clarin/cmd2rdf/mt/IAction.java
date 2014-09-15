@@ -13,4 +13,5 @@ public interface IAction {
 	public void startUp(Map<String, String> vars) throws ActionException;
 	public Object execute(String path,Object object) throws ActionException;
 	public void shutDown() throws ActionException;
+	public String name();
 }
