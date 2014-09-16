@@ -5,15 +5,17 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
+import nl.knaw.dans.clarin.cmd2rdf.batch.Launcher;
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
 import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
 import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
 import org.apache.commons.io.FileUtils;
+import org.javasimon.SimonManager;
+import org.javasimon.Split;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +70,7 @@ public class MD5ChecksumDBAction implements IAction {
 	}
 
 	private void checksumDiff() throws ActionException {
+		Split split = SimonManager.getStopwatch("stopwatch.db").start();
 		if (xmlSourceDir == null || xmlSourceDir.isEmpty())
 			throw new ActionException("xmlSourceDir is null or empty");
 		
@@ -86,6 +89,7 @@ public class MD5ChecksumDBAction implements IAction {
 //			if ((f.length()/1048576)>1)
 //				smallFiles.add(f);
 //		}
+		split.stop();
 		log.debug("===== Number of files TOTAL FILES : " + allFiles.size());
 		//log.debug("===== Number of files SMALL FILES : " + smallFiles.size());
 		try {
