@@ -16,6 +16,8 @@ import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.io.XMLWriter;
+import org.javasimon.SimonManager;
+import org.javasimon.Split;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +53,7 @@ public class OaipmhHarvester implements IAction{
 	 * @throws IOException 
 	 */
 	private boolean harvest(){
+		Split split = SimonManager.getStopwatch("stopwatch.oai").start();
 		log.debug("Harvesting... ");
 		log.debug("baseUrl: " + oaipmhBaseURL);
 		log.debug("prefix: " + prefix);
@@ -108,6 +111,7 @@ public class OaipmhHarvester implements IAction{
 		doc.add(rootElement);
 		 // lets write to a file
         ok = writeRdfDocumentToFile(doc);
+        split.stop();
 		return ok;
 	}
 	

@@ -18,6 +18,8 @@ import javax.xml.transform.stream.StreamSource;
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 
 import org.apache.directmemory.cache.CacheService;
+import org.javasimon.SimonManager;
+import org.javasimon.Split;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
@@ -85,8 +87,13 @@ public class XsltTransformer implements IAction{
 			input = new DOMSource(node);
 		} else
 			throw new ActionException("Unknown input ("+p+", "+o+")");
+		Split split = null;
 		try {
 			
+			if (xsltSource.endsWith("CMDRecord2RDF.xsl"))
+				split = SimonManager.getStopwatch("stopwatch.trans1").start();
+			else 
+				split = SimonManager.getStopwatch("stopwatch.trans2").start();
 			URIResolver resolver = (URIResolver) new ClarinProfileResolver(profilesCacheDir, registry, cacheService);
 			Transformer transformer = cachedXSLT.newTransformer();	
 			transformer.setURIResolver(resolver);
@@ -108,7 +115,10 @@ public class XsltTransformer implements IAction{
 			log.error("ERROR: TransformerException, caused by: " + e.getCause());
 		} catch (ActionException e) {
 			log.error("ERROR: ConverterException, caused by: " + e.getCause());
-		} 
+		} finally {
+			if (split != null)
+				split.stop();
+		}
 		return output.getNode();    
     }     
 

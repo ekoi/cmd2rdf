@@ -29,6 +29,7 @@ import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
 import nl.knaw.dans.clarin.cmd2rdf.mt.WorkerCallable;
 import nl.knaw.dans.clarin.cmd2rdf.mt.WorkerThread;
 import nl.knaw.dans.clarin.cmd2rdf.store.db.ChecksumDb;
+import nl.knaw.dans.clarin.cmd2rdf.util.DurationType;
 import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
 import org.apache.commons.io.FileUtils;
@@ -41,8 +42,8 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 	private static final Logger log = LoggerFactory.getLogger(JobProcessor.class);
 	private final Pattern pattern = Pattern.compile("\\{(.*?)\\}");
 	private static final String URL_DB = "urlDB";
-	private static final Map<String, String> GLOBAL_VARS = new HashMap<String, String>();
-	private static CacheService<Object, Object> cacheService;
+	private static volatile Map<String, String> GLOBAL_VARS = new HashMap<String, String>();
+	private static volatile CacheService<Object, Object> cacheService;
 	
 
 	public void processRecord(Jobs job)
@@ -161,36 +162,37 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		log.debug("==============================================================");
 		for (List<String> pth : paths2) {
 			n++;
-			ExecutorService executor = Executors.newFixedThreadPool(r.nThreads);
+			ExecutorService executor = Executors.newCachedThreadPool();
 			log.info(">>>>>>>>>>>>>[" + n + "]Number of processed records files: " + pth.size() );
-			List<Future<String>> futures = new ArrayList<Future<String>>();
+			//List<Future<String>> futures = new ArrayList<Future<String>>();
 			for (String p : pth) {
 				i++;
 				 Callable<String> worker = new WorkerCallable(p, actions, i);
-			     Future<String> future = executor.submit(worker);
-			     futures.add(future);
-			     try {
-					log.debug(future.get());
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				 executor.submit(worker);
+//			     Future<String> future = executor.submit(worker);
+//			     futures.add(future);
+//			     try {
+//					log.debug(future.get());
+//				} catch (InterruptedException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				} catch (ExecutionException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
 			}
-			log.debug("============ FUTURE SIZE: " + futures.size() + "\tPATHS SIZE: " + paths.size() );
-			for (Future<String> future:futures) {
-				try {
-					log.debug("### " + future.get() );
-				} catch (InterruptedException   e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+//			log.debug("============ FUTURE SIZE: " + futures.size() + "\tPATHS SIZE: " + paths.size() );
+//			for (Future<String> future:futures) {
+//				try {
+//					log.debug("### " + future.get() );
+//				} catch (InterruptedException   e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				} catch (ExecutionException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//			}
 			executor.shutdown();
 			while (!executor.isTerminated()) {}
 			log.info("===Finished "+ pth.size() + " threads===");

@@ -1,6 +1,7 @@
 package nl.knaw.dans.clarin.cmd2rdf.store;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -24,9 +25,9 @@ import javax.xml.transform.stream.StreamResult;
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
 import nl.knaw.dans.clarin.cmd2rdf.util.ActionStatus;
-import nl.knaw.dans.clarin.cmd2rdf.util.BytesConverter;
 import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
+import org.apache.commons.io.FileUtils;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,10 +166,10 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 			log.debug("START transformation from DOMSource to RD.F");
 			long startTrans = System.currentTimeMillis();
 			TransformerFactory.newInstance().newTransformer().transform(source,result);
-			log.debug("END transformation from DOMSource to RDF. Duration: " + BytesConverter.friendly(System.currentTimeMillis() - startTrans) + " milliseconds.");
+			log.debug("END transformation from DOMSource to RDF. Duration: " + FileUtils.byteCountToDisplaySize(BigInteger.valueOf(System.currentTimeMillis() - startTrans)) + " milliseconds.");
 			
 			byte[] bytes = bos.toByteArray();
-			log.debug("BYTES SIZE: " + BytesConverter.friendly(bytes.length));
+			log.debug("BYTES SIZE: " + FileUtils.byteCountToDisplaySize(BigInteger.valueOf(bytes.length)));
 			
 			long startUplod = System.currentTimeMillis();
 			

@@ -15,9 +15,10 @@ import javax.xml.transform.stream.StreamResult;
 
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
 import nl.knaw.dans.clarin.cmd2rdf.mt.IAction;
-import nl.knaw.dans.clarin.cmd2rdf.util.BytesConverter;
 
 import org.apache.commons.io.FileUtils;
+import org.javasimon.SimonManager;
+import org.javasimon.Split;
 import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +64,9 @@ public class FileStore implements IAction{
 	}
 
 	public Object execute(String path, Object object) throws ActionException {
+		Split split = SimonManager.getStopwatch("stopwatch.filestore").start();
 		boolean status = saveRdfToFileSystem(path, object);
-
+		split.stop();
 		return status;
 	}
 
@@ -108,7 +110,6 @@ private boolean saveRdfToFileSystem(String path, Object object)
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	} else
 		throw new ActionException("Unknown input ("+path+", "+object+")");
 	return false;
