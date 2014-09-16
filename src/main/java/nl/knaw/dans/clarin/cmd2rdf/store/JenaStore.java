@@ -26,9 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
-import virtuoso.jena.driver.VirtGraph;
-import virtuoso.jena.driver.VirtuosoUpdateFactory;
-import virtuoso.jena.driver.VirtuosoUpdateRequest;
+//import virtuoso.jena.driver.VirtGraph;
+//import virtuoso.jena.driver.VirtuosoUpdateFactory;
+//import virtuoso.jena.driver.VirtuosoUpdateRequest;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -44,7 +44,7 @@ public class JenaStore implements IAction{
 	private String prefixBaseURI;
 	private ActionStatus act;
 	private static int n;
-	VirtGraph set = new VirtGraph ("jdbc:virtuoso://localhost:1111", "dba", "dba");
+	//VirtGraph set = new VirtGraph ("jdbc:virtuoso://localhost:1111", "dba", "dba");
 	Model model = ModelFactory.createDefaultModel();
 
 	public JenaStore(){
@@ -149,8 +149,8 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
                		sww.append("\n");
                	  }
                	  sww.append("}");
-            	  VirtuosoUpdateRequest vur = VirtuosoUpdateFactory.create(sww.toString(), set);
-            	  vur.exec();
+            	  //VirtuosoUpdateRequest vur = VirtuosoUpdateFactory.create(sww.toString(), set);
+            	  //vur.exec();
               }
               StringBuffer sww = new StringBuffer("INSERT IN GRAPH <" + str + "> {\n");
               
@@ -161,8 +161,8 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
               
 	              sww.append("}");
 	              //log.debug(sww.toString());
-	              VirtuosoUpdateRequest vur = VirtuosoUpdateFactory.create(sww.toString(), set);
-	        	  vur.exec();   
+	              //VirtuosoUpdateRequest vur = VirtuosoUpdateFactory.create(sww.toString(), set);
+	        	  //vur.exec();   
 	          }
               n++;
               
