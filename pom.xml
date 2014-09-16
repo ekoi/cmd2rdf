@@ -196,21 +196,28 @@
 	<artifactId>jena-arq</artifactId>
 	<version>2.12.0</version>
 </dependency>
-	<dependency>
-      <groupId>com.openlink.virtuoso</groupId>
-      <artifactId>virtjdbc3</artifactId>
-      <version>1.0</version>
-    </dependency>
-	<dependency>
-      <groupId>com.openlink.virtuoso</groupId>
-      <artifactId>virt_jena</artifactId>
-      <version>1.0</version>
-    </dependency>
+<!-- 	<dependency> -->
+<!--       <groupId>com.openlink.virtuoso</groupId> -->
+<!--       <artifactId>virtjdbc3</artifactId> -->
+<!--       <version>1.0</version> -->
+<!--     </dependency> -->
+	 	<dependency>
+    <groupId>tr.com.srdc</groupId>
+    <artifactId>virt-jena</artifactId>
+    <version>2.6.2-srdc</version>
+</dependency>
 <!-- 	<dependency> -->
 <!--        	<groupId>org.rabinfingerprint</groupId> -->
 <!-- 		<artifactId>rabinfingerprint</artifactId> -->
 <!-- 		<version>1.0.0-SNAPSHOT</version> -->
 <!--     </dependency> -->
+	
+	<!-- javasimom  -->
+	<dependency>
+		<groupId>org.javasimon</groupId>
+		<artifactId>javasimon-core</artifactId>
+		<version>3.5.1</version>
+	</dependency>
 	
   </dependencies>
   
@@ -352,7 +359,16 @@
 				  </execution> 
  			 	</executions>
 			</plugin>	
-
+			<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.1</version>
+    <configuration>
+        <source>1.7</source>
+        <target>1.7</target>
+        <compilerArgument>-proc:none</compilerArgument>
+    </configuration>
+</plugin>
 		</plugins>
 	</build>
 	<repositories>
