@@ -29,6 +29,9 @@ import nl.knaw.dans.clarin.cmd2rdf.util.Misc;
 
 import org.apache.commons.io.FileUtils;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.javasimon.SimonManager;
+import org.javasimon.Split;
+import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
@@ -101,6 +104,7 @@ public class VirtuosoClient implements IAction{
 	}
 
 	public Object execute(String path, Object object) throws ActionException {
+		Split split = SimonManager.getStopwatch("stopwatch.virtuosoUpload").start();
 		boolean status = false;
 		switch(act){
 			case POST: status = uploadRdfToVirtuoso(path, object);
@@ -109,7 +113,7 @@ public class VirtuosoClient implements IAction{
 				break;
 			default:
 		}
-
+		split.stop();
 		return status;
 	}
 
@@ -157,19 +161,21 @@ private String getGIRI(String path) throws ActionException {
 private boolean uploadRdfToVirtuoso(String path, Object object)
 		throws ActionException {
 	if (object instanceof Node) {
-		log.debug("Upload '" + path.replace(".xml", ".rdf") + "'.");
+		String fname = path.replace(".xml", ".rdf");
+		log.debug("Upload '" + fname + "'.");
 		Node node = (Node)object;
 		DOMSource source = new DOMSource(node);
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		StreamResult result = new StreamResult(bos);
 		try {
-			log.debug("START transformation from DOMSource to RD.F");
+			log.debug("START transformation from DOMSource to RDF");
 			long startTrans = System.currentTimeMillis();
 			TransformerFactory.newInstance().newTransformer().transform(source,result);
-			log.debug("END transformation from DOMSource to RDF. Duration: " + FileUtils.byteCountToDisplaySize(BigInteger.valueOf(System.currentTimeMillis() - startTrans)) + " milliseconds.");
+			Period p = new Period(System.currentTimeMillis() - startTrans);
+			log.debug("END transformation from DOMSource to RDF. Duration: "  + p.getMinutes() + " minutes, " +  p.getSeconds() + " secs, " + p.getMillis() + " ms.");
 			
 			byte[] bytes = bos.toByteArray();
-			log.debug("BYTES SIZE: " + FileUtils.byteCountToDisplaySize(BigInteger.valueOf(bytes.length)));
+			log.debug(fname + " has BYTES SIZE : " + FileUtils.byteCountToDisplaySize(BigInteger.valueOf(bytes.length)));
 			
 			long startUplod = System.currentTimeMillis();
 			
