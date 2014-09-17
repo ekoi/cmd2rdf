@@ -131,6 +131,7 @@ public class ChecksumDb {
                 + "md5 VARCHAR(" + COL_CHECKSUM_MAX_LENGTH + "), size BIGINT, status VARCHAR(" + COL_ACTION_MAX_LENTH + "))");
 		update("CREATE INDEX path_idx ON " + TABLE_NAME + "(path)");
         update("CREATE INDEX md5_idx ON " + TABLE_NAME + "(md5)");
+        update("CREATE INDEX size_idx ON " + TABLE_NAME + "(size)");
         conn.setAutoCommit(false);
 	}
 
@@ -164,14 +165,9 @@ public class ChecksumDb {
 
         st.close();
     }    
-    
-    public List<String> getRecords(ActionStatus as) {
-		return getRecords(as, null, null);
-    }
-    
-	public List<String> getRecords(ActionStatus as, ActionStatus xmlLimitSize,
-			String xmlLimitValue) {
-		
+	
+	public List<String> getRecords(ActionStatus as, String xmlLimitSizeMin,
+			String xmlLimitSizeMax) {
 		String sql = "";
 		switch (as) {
 		case NEW:
@@ -190,12 +186,11 @@ public class ChecksumDb {
 			sql = NEW_RECORD_QUERY;
 			break;
 		}
-		if (xmlLimitSize != null && xmlLimitValue != null) {
-			if (ActionStatus.MAXIMUM.equals(xmlLimitSize))
-				sql += " AND size < " + xmlLimitValue;
-			else if (ActionStatus.MINIMUM.equals(xmlLimitSize)) 
-				sql += " AND size >= " + xmlLimitValue;
-		}
+		if (xmlLimitSizeMin != null) 
+			sql += " AND size >= " + xmlLimitSizeMin;
+		
+		if (xmlLimitSizeMax != null)
+			sql += " AND size <= " + xmlLimitSizeMax;
 			
 		List<String> paths = new ArrayList<String>();
 		try {
