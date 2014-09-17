@@ -106,18 +106,28 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		fillInCacheService();
 		
 		for(Record r:records) {
+			log.debug("###### PROCESSING OF RECORD : " + r.desc);
 			List<String> paths = null;
 			if (r.xmlSource.contains(URL_DB)) {
 				String urlDB = subtituteGlobalValue(r.xmlSource);
 				ChecksumDb cdb = new ChecksumDb(urlDB);
-				if (r.xmlLimitSize != null && r.xmlLimitValue == null)
-					throw new IllegalArgumentException("ERROR: If xmlLimitSize is specified, the xmlLimitValue must be specified.");
-				if (r.xmlLimitValue != null && r.xmlLimitSize == null)
-					throw new IllegalArgumentException("ERROR: If xmlLimitValue is specified, the xmlLimitSize must be specified.");
-		    	if (r.xmlLimitSize != null && r.xmlLimitValue != null)
-				   paths = cdb.getRecords(Misc.convertToActionStatus(r.filter), Misc.convertToActionStatus(r.xmlLimitSize), r.xmlLimitValue);
-		    	else 
-		    		paths = cdb.getRecords(Misc.convertToActionStatus(r.filter));
+				if (r.xmlLimitSizeMin != null) {
+					try {
+						Integer.parseInt(r.xmlLimitSizeMin);
+					} catch (NumberFormatException e) {
+						throw new IllegalArgumentException("ERROR: xmlLimitSizeMin value is not integer. " + e.getMessage());
+					}
+				}
+					
+				if (r.xmlLimitSizeMax != null) {
+					try {
+						Integer.parseInt(r.xmlLimitSizeMax);
+					} catch (NumberFormatException e) {
+						throw new IllegalArgumentException("ERROR: xmlLimitSizeMax value is not integer. " + e.getMessage());
+					}
+				}
+				
+		    	paths = cdb.getRecords(Misc.convertToActionStatus(r.filter), r.xmlLimitSizeMin, r.xmlLimitSizeMax);
 		    	cdb.closeDbConnection();
 			}
 			
@@ -149,15 +159,10 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		int n=0;
 		int i=0;
 		List<List<String>> paths2 = Misc.split(paths, r.nThreads);
-		int a = paths.size();
-		int b = paths2.size();
-		int c = paths2.get(paths2.size()-1).size();
-		int d = ((b-1)*r.nThreads) + c;
+		int totalfiles = paths.size();
 		log.debug("==============================================================");
-		log.debug("Numbers of files: " + a);
-		log.debug("Numbers op splitsing: " + b);
-		log.debug("Last index: " + c);
-		log.debug("a: " + a + "\td: " + d);
+		log.debug("Numbers of files: " + totalfiles);
+		log.debug("Numbers op splitsing: " + paths2.size());
 		log.debug("==============================================================");
 		for (List<String> pth : paths2) {
 			n++;
@@ -195,8 +200,8 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			executor.shutdown();
 			while (!executor.isTerminated()) {}
 			log.info("===Finished "+ pth.size() + " threads===");
-			a=a-pth.size();
-			log.info("REMAINS: " + a);
+			totalfiles=totalfiles-pth.size();
+			log.info("REMAINS: " + totalfiles);
 		}
 	}
 	
@@ -227,32 +232,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		log.info("===Finished all threads===");
 	}
 	
-	private void doMultithreadingAction2(Record r, List<String> paths,
-			List<IAction> actions) {
-		
-		log.info("Number of processed records files: " + paths.size() );
-		boolean ok = true;
-		int len = paths.size();
-		
-		for (int i=0; i<len; i++) {
-			System.out.println("begin i: " + i);
-			log.debug("Multithreading is on, number of threads: " + r.nThreads);
-			ExecutorService executor = Executors.newFixedThreadPool(r.nThreads);
-			for (int j=0; j<r.nThreads && i<len; j++) {
-				 Runnable worker = new WorkerThread(paths.get(i), actions);
-			     executor.execute(worker);
-			     i++;
-			}
-			executor.shutdown();
-			 
-			while (!executor.isTerminated()) {
-				System.out.println(executor.isTerminated());
-			}
-			System.out.println("end i: " + i);
-			log.info("===Finished " + r.nThreads + " threads===");
-		}
-		log.info("===Finished all threads===");
-	}
+	
 	private void closeCacheService() {
 		log.debug("closeCacheService: CLOSE CacheService. It contains " + cacheService.entries() + " items.");
 		cacheService.clear();
@@ -306,6 +286,7 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 		log.debug("Execute cleanup part.");	
 		List<IAction> actions = new ArrayList<IAction>();
 		for (Action act : list) {
+			log.debug(act.name);
 			IAction clazzAction = startUpAction(act);		
 			if (clazzAction == null)
 				log.error("FATAL ERROR: " + act.name + " is null.");

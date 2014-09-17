@@ -29,7 +29,8 @@ public class Launcher {
 	private static volatile Stopwatch stopwatchOai = SimonManager.getStopwatch("stopwatch.oai");
 	private static volatile Stopwatch stopwatchTrans1 = SimonManager.getStopwatch("stopwatch.trans1");
 	private static volatile Stopwatch stopwatchTrans2 = SimonManager.getStopwatch("stopwatch.trans2");
-	private static volatile Stopwatch stopwatchFS = SimonManager.getStopwatch("stopwatch.filestore");
+	private static volatile Stopwatch stopwatchFS = SimonManager.getStopwatch("stopwatch.virtuosoUpload");
+	private static volatile Stopwatch stopwatchBI = SimonManager.getStopwatch("stopwatch.bulkimport");
 	
     public static void main(String[] args) throws Exception {
     	
@@ -80,6 +81,7 @@ public class Launcher {
         log.debug("stopwatchTrans1: " + stopwatchTrans1);
         log.debug("stopwatchTrans2: " + stopwatchTrans2);
         log.debug("stopwatchFS: " + stopwatchFS);
+        log.debug("stopwatchBI: " + stopwatchBI);
 
     }
 

@@ -17,6 +17,9 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Record{
 	
+	@XmlAttribute(required = false)
+	String desc;
+	
 	@XmlAttribute(required = true)
 	String filter;
 	
@@ -24,10 +27,10 @@ public class Record{
 	int nThreads;
 	
 	@XmlAttribute(required = false)
-	String xmlLimitSize;
+	String xmlLimitSizeMin;
 	
 	@XmlAttribute(required = false)
-	String xmlLimitValue;
+	String xmlLimitSizeMax;
 	
 	@XmlAttribute(required = true)
 	String xmlSource;
