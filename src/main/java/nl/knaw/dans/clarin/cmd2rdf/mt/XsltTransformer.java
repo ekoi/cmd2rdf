@@ -108,18 +108,18 @@ public class XsltTransformer implements IAction{
 					 output);
 			long end = System.currentTimeMillis();
 			log.info("Duration of transformation " + ((end-start)) + " milliseconds");
-			
+			return output.getNode();
 		} catch (TransformerConfigurationException e) {
-			log.error("ERROR: TransformerConfigurationException, caused by: " + e.getCause());
+			log.error("ERROR: TransformerConfigurationException, caused by: " + e.getCause(), e);
 		} catch (TransformerException e) {
-			log.error("ERROR: TransformerException, caused by: " + e.getCause());
+			log.error("ERROR: TransformerException, caused by: " + e.getCause(), e);
 		} catch (ActionException e) {
-			log.error("ERROR: ConverterException, caused by: " + e.getCause());
+			log.error("ERROR: ConverterException, caused by: " + e.getCause(), e);
 		} finally {
 			if (split != null)
 				split.stop();
 		}
-		return output.getNode();    
+		return false;    
     }     
 
 	public void shutDown() throws ActionException {

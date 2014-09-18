@@ -93,14 +93,21 @@ private boolean saveRdfToFileSystem(String path, Object object)
 			long l = System.currentTimeMillis();
 			String gIRI = getGIRI(path);
 			String rdfFileOutputName = gIRI.replace(prefixBaseURI,  rdfOutputDir).replace(".xml", ".rdf");
-			TransformerFactory.newInstance().newTransformer().transform(source,new StreamResult(new File(rdfFileOutputName)));
+			log.debug("Saving " + rdfFileOutputName);
+			File rdfFile = new File(rdfFileOutputName);
+			TransformerFactory.newInstance().newTransformer().transform(source,new StreamResult(rdfFile));
 			FileUtils.write(new File(rdfFileOutputName+".graph"), gIRI);
+			if (!rdfFile.exists()) {
+				log.error("ERROR Saving file: " + rdfFile);
+				throw new ActionException("ERROR Saving file: " + rdfFile);
+			}
 			long duration = (System.currentTimeMillis() - l );
 			log.debug("Save duration: " + duration + " ms.");
 			if (duration > 5000) {
 				Period p = new Period(duration);
 				log.debug("Saving took more than 4 seconds. It took " + p.getSeconds() + " secs.");
 			}
+			return true;
 		} catch (TransformerConfigurationException e) {
 			log.error("ERROR: TransformerConfigurationException, caused by " + e.getMessage());
 		} catch (TransformerException e) {

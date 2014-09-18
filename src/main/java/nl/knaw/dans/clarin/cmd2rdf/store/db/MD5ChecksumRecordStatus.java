@@ -41,7 +41,13 @@ public class MD5ChecksumRecordStatus implements IAction {
 	public Object execute(String path, Object object) throws ActionException {
 		log.debug("execute, action name: " + act.name());
 		log.debug(act.name() + " status of '" + path + "' to " + status);
-		db.updateActionStatusByRecord(path, act);
+		if (object instanceof Boolean && !(Boolean)object) {
+			log.debug("SKIP updating the " + path);
+			db.updateActionStatusByRecord(path, ActionStatus.ERROR);
+		} else  {
+			db.updateActionStatusByRecord(path, act);
+		}
+			
 		return null;
 	}
 
