@@ -56,7 +56,7 @@ public class FileStore implements IAction{
 		String replacedPrefixBaseURIVars[] = replacedPrefixBaseURIVar.split(",");
 		for (String s:replacedPrefixBaseURIVars) {
 			if (!s.trim().isEmpty())
-				replacedPrefixBaseURI.add(s);
+				replacedPrefixBaseURI.add(s.trim());
 		}
 	
 		log.debug("Save the RDF files to " + rdfOutputDir);
@@ -91,9 +91,10 @@ private boolean saveRdfToFileSystem(String path, Object object)
 		DOMSource source = new DOMSource(node);
 		try {
 			long l = System.currentTimeMillis();
-			String rdfFileOutputName = path.replace(xmlSourceDir,  rdfOutputDir).replace(".xml", ".rdf");
+			String gIRI = getGIRI(path);
+			String rdfFileOutputName = gIRI.replace(prefixBaseURI,  rdfOutputDir).replace(".xml", ".rdf");
 			TransformerFactory.newInstance().newTransformer().transform(source,new StreamResult(new File(rdfFileOutputName)));
-			FileUtils.write(new File(rdfFileOutputName+".graph"), getGIRI(path));
+			FileUtils.write(new File(rdfFileOutputName+".graph"), gIRI);
 			long duration = (System.currentTimeMillis() - l );
 			log.debug("Save duration: " + duration + " ms.");
 			if (duration > 5000) {
