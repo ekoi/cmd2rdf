@@ -30,6 +30,7 @@ import org.w3c.dom.Node;
  */
 public class FileStore implements IAction{
 	private static final Logger log = LoggerFactory.getLogger(FileStore.class);
+	private static final Logger errLog = LoggerFactory.getLogger("errorlog");
 	private String xmlSourceDir;
 	private String rdfOutputDir;
 	private List<String> replacedPrefixBaseURI = new ArrayList<String>();
@@ -60,7 +61,7 @@ public class FileStore implements IAction{
 		}
 	
 		log.debug("Save the RDF files to " + rdfOutputDir);
-		
+		errLog.debug("YAAAAAAAA");
 	}
 
 	public Object execute(String path, Object object) throws ActionException {
@@ -97,26 +98,25 @@ private boolean saveRdfToFileSystem(String path, Object object)
 			File rdfFile = new File(rdfFileOutputName);
 			TransformerFactory.newInstance().newTransformer().transform(source,new StreamResult(rdfFile));
 			FileUtils.write(new File(rdfFileOutputName+".graph"), gIRI);
-			if (!rdfFile.exists()) {
-				log.error("ERROR Saving file: " + rdfFile);
-				throw new ActionException("ERROR Saving file: " + rdfFile);
-			}
+//			if (!rdfFile.exists()) {
+//				log.error("ERROR Saving file: " + rdfFile);
+//				throw new ActionException("ERROR Saving file: " + rdfFile);
+//			}
 			long duration = (System.currentTimeMillis() - l );
-			log.debug("Save duration: " + duration + " ms.");
+			log.debug("Save duration: " + duration + " ms. Size: " + FileUtils.byteCountToDisplaySize(rdfFile.length()));
 			if (duration > 5000) {
 				Period p = new Period(duration);
 				log.debug("Saving took more than 4 seconds. It took " + p.getSeconds() + " secs.");
 			}
 			return true;
 		} catch (TransformerConfigurationException e) {
-			log.error("ERROR: TransformerConfigurationException, caused by " + e.getMessage());
+			errLog.error("ERROR: TransformerConfigurationException, caused by " + e.getMessage(), e);
 		} catch (TransformerException e) {
-			log.error("ERROR: TransformerException, caused by " + e.getMessage());
+			errLog.error("ERROR: TransformerException, caused by " + e.getMessage(), e);
 		} catch (TransformerFactoryConfigurationError e) {
-			log.error("ERROR: TransformerFactoryConfigurationError, caused by " + e.getMessage());
+			errLog.error("ERROR: TransformerFactoryConfigurationError, caused by " + e.getMessage(), e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			errLog.error("ERROR: IOException, caused by " + e.getMessage(), e);
 		}
 	} else
 		throw new ActionException("Unknown input ("+path+", "+object+")");

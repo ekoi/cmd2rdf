@@ -34,7 +34,7 @@ public class XsltTransformer implements IAction{
      * @param xsltPath - Absolute path to xslt file. 
      * @param resultDir - Directory where you want to put resulting files. 
      */  
-	
+	private static final Logger errLog = LoggerFactory.getLogger("errorlog");
 	private static final Logger log = LoggerFactory.getLogger(XsltTransformer.class);
 	private static CacheService<Object, Object> cacheService;
 	private Templates cachedXSLT;
@@ -110,11 +110,11 @@ public class XsltTransformer implements IAction{
 			log.info("Duration of transformation " + ((end-start)) + " milliseconds");
 			return output.getNode();
 		} catch (TransformerConfigurationException e) {
-			log.error("ERROR: TransformerConfigurationException, caused by: " + e.getCause(), e);
+			errLog.error("ERROR: TransformerConfigurationException, caused by: " + e.getCause(), e);
 		} catch (TransformerException e) {
-			log.error("ERROR: TransformerException, caused by: " + e.getCause(), e);
+			errLog.error("ERROR: TransformerException, caused by: " + e.getCause(), e);
 		} catch (ActionException e) {
-			log.error("ERROR: ConverterException, caused by: " + e.getCause(), e);
+			errLog.error("ERROR: ConverterException, caused by: " + e.getCause(), e);
 		} finally {
 			if (split != null)
 				split.stop();

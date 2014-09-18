@@ -70,7 +70,8 @@ public class VirtuosoBulkImporter implements IAction{
 
 private boolean excuteBulkImport() throws ActionException {
 		log.debug("######## START EXCUTING BULK IMPORT ###############");
-		log.debug("BULK COMMAND: " + virtuosoBulkImport);
+		for (String s:virtuosoBulkImport)
+			log.debug("BULK COMMAND: " + s);
 		
 		long start = System.currentTimeMillis();
 		

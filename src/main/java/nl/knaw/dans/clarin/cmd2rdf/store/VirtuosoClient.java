@@ -41,6 +41,7 @@ import org.w3c.dom.Node;
  *
  */
 public class VirtuosoClient implements IAction{
+	private static final Logger errLog = LoggerFactory.getLogger("errorlog");
 	private static final String NAMED_GRAPH_IRI = "graph-uri";
 	private static final Logger log = LoggerFactory.getLogger(VirtuosoClient.class);
 	private Client client;
@@ -101,6 +102,10 @@ public class VirtuosoClient implements IAction{
 //		client = ClientBuilder.newClient();
 //		HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.digest(username, password);
 //		client.register(authFeature);
+		
+		client = ClientBuilder.newClient();
+		HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.digest(username, password);
+		client.register(authFeature);
 	}
 
 	public Object execute(String path, Object object) throws ActionException {
@@ -136,10 +141,9 @@ private boolean deleteRdfFromVirtuoso(String path) {
 			log.error(">>>>>>>>>> ERROR: " + status);
 		}
 	} catch (URISyntaxException e) {
-		log.error("ERROR: URISyntaxException, caused by " + e.getMessage());
-		e.printStackTrace();
+		errLog.error("ERROR: URISyntaxException, caused by " + e.getMessage(), e);
 	} catch (ActionException e) {
-		log.error("ERROR: ActionException, caused by " + e.getMessage());
+		errLog.error("ERROR: ActionException, caused by " + e.getMessage(), e);
 	}
 	
 	return false;
@@ -182,10 +186,6 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 			String gIRI = getGIRI(path);
 			UriBuilder uriBuilder = UriBuilder.fromUri(new URI(serverURL));
 			uriBuilder.queryParam(NAMED_GRAPH_IRI, gIRI);
-			client = ClientBuilder.newClient();
-			HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.digest(username, password);
-			client.register(authFeature);
-			
 			WebTarget target = client.target(uriBuilder.build());
 			
 			Response response = target.request().post(Entity.entity(bytes, MediaType.APPLICATION_OCTET_STREAM));
@@ -198,15 +198,15 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 			} else {
 				log.error(">>>>>>>>>> ERROR: " + status);
 			}
-			client.close();
+			
 		} catch (TransformerConfigurationException e) {
-			log.error("ERROR: TransformerConfigurationException, caused by " + e.getMessage());
+			errLog.error("ERROR: TransformerConfigurationException, caused by " + e.getMessage(), e);
 		} catch (TransformerException e) {
-			log.error("ERROR: TransformerException, caused by " + e.getMessage());
+			errLog.error("ERROR: TransformerException, caused by " + e.getMessage());
 		} catch (TransformerFactoryConfigurationError e) {
-			log.error("ERROR: TransformerFactoryConfigurationError, caused by " + e.getMessage());
+			errLog.error("ERROR: TransformerFactoryConfigurationError, caused by " + e.getMessage(), e);
 		} catch (URISyntaxException e) {
-			log.error("ERROR: URISyntaxException, caused by " + e.getMessage());
+			errLog.error("ERROR: URISyntaxException, caused by " + e.getMessage(), e);
 		}
 		
 	} else
@@ -216,6 +216,8 @@ private boolean uploadRdfToVirtuoso(String path, Object object)
 	
 
 	public void shutDown() throws ActionException {
+		if (client != null)
+			client.close();
 	}
 	
 	@Override
