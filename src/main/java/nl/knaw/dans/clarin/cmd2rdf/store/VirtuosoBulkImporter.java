@@ -65,6 +65,10 @@ public class VirtuosoBulkImporter implements IAction{
 		Split split = SimonManager.getStopwatch("stopwatch.bulkimport").start();
 		boolean status = excuteBulkImport();
 		split.stop();
+		if (!status) {
+			errLog.debug("FATAL ERROR, THE BULK IMPORT IS FAILED ---> SYSTEM TERMINATED.");
+			System.exit(1);
+		}
 		return status;
 	}
 
