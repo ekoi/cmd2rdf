@@ -149,8 +149,8 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			for(IAction action : actions) {
 				action.shutDown();
 			}
-			
-			doCleanup(r.cleanup.actions);
+			if (r.cleanup != null && r.cleanup.actions != null)
+				doCleanup(r.cleanup.actions);
 		}
 	}
 	
