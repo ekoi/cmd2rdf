@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class ClarinProfileResolver implements URIResolver {
+	private static final Logger errLog = LoggerFactory.getLogger("errorlog");
 	private static final Logger log = LoggerFactory.getLogger(ClarinProfileResolver.class);
 	private String basePath;
 	private static CacheService<Object, Object> cacheService;
@@ -121,6 +122,10 @@ public class ClarinProfileResolver implements URIResolver {
 			}
 			
 			byte b[] = readHref(href);
+			if (b == null) {
+				errLog.debug("ERROR while reading " + href + ". It contains null value.");
+			}
+				
 			InputStream is = new ByteArrayInputStream(b);
 			cacheService.putByteArray(filename, b);
 			log.debug(cacheService.entries()
