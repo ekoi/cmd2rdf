@@ -61,7 +61,6 @@ public class FileStore implements IAction{
 		}
 	
 		log.debug("Save the RDF files to " + rdfOutputDir);
-		errLog.debug("YAAAAAAAA");
 	}
 
 	public Object execute(String path, Object object) throws ActionException {
