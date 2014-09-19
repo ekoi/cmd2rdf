@@ -24,9 +24,15 @@ import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamSource;
 
 import nl.knaw.dans.clarin.cmd2rdf.exception.ActionException;
+import nl.knaw.dans.clarin.cmd2rdf.util.HttpConnectionManager;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.directmemory.cache.CacheService;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,13 +119,8 @@ public class ClarinProfileResolver implements URIResolver {
 				href = "http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1360230992133/xml";
 				filename = "clarin.eu_cr1_p_1360230992133.xml";
 			}
-			BufferedReader br = readHref(href);
-			String inputLine;
-			StringBuffer sb = new StringBuffer();
-			while ((inputLine = br.readLine()) != null)
-				sb.append(inputLine);
-			br.close();
-			byte b[] = sb.toString().getBytes(StandardCharsets.UTF_8);
+			
+			byte b[] = readHref(href);
 			InputStream is = new ByteArrayInputStream(b);
 			cacheService.putByteArray(filename, b);
 			log.debug(cacheService.entries()
@@ -139,20 +140,23 @@ public class ClarinProfileResolver implements URIResolver {
 		return null;
 	}
 	
-	private BufferedReader readHref(String href) throws IOException {
-		BufferedReader br = null;
+	private byte[] readHref(String href) throws IOException {
 		Object oHref = getHrefAsURLorFile(href);
 		if (oHref == null) {
 			log.error("FATAL ERROR '" + href + "' is NULL.");
 		} else if (oHref instanceof URL) {
-			URL url = (URL)oHref;
-			br = new BufferedReader(
-			        new InputStreamReader(url.openStream()));
+			HttpRequestBase base = new HttpGet(oHref.toString());
+		    HttpResponse response = HttpConnectionManager.execute(base);
+		    HttpEntity entity = response.getEntity();
+		    
+		    byte[] b = EntityUtils.toByteArray(entity);
+			return b;
 		} else if (oHref instanceof File) {
 			File f = (File)oHref;
-			br = new BufferedReader(new FileReader(f));
+			byte[] b = FileUtils.readFileToByteArray(f);
+			return b;
 		}
-		return br;
+		return null;
 	}
 	
 	private Object getHrefAsURLorFile(String href) {
