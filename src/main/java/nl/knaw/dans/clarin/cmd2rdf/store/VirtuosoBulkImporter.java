@@ -31,6 +31,7 @@ import org.w3c.dom.Node;
  *
  */
 public class VirtuosoBulkImporter implements IAction{
+	private static final Logger errLog = LoggerFactory.getLogger("errorlog");
 	private static final Logger log = LoggerFactory.getLogger(VirtuosoBulkImporter.class);
 	private static final String VIRTUOSO_BULK_IMPORT_SH = "/virtuoso_bulk_import.sh";
 	private String[] virtuosoBulkImport;
@@ -69,23 +70,27 @@ public class VirtuosoBulkImporter implements IAction{
 
 
 private boolean excuteBulkImport() throws ActionException {
+	boolean ok=false;
 		log.debug("######## START EXCUTING BULK IMPORT ###############");
 		for (String s:virtuosoBulkImport)
 			log.debug("BULK COMMAND: " + s);
 		
 		long start = System.currentTimeMillis();
 		
-		executeIsql(virtuosoBulkImport);
+		ok = executeIsql(virtuosoBulkImport);
 		
+		if (!ok)
+			errLog.error("ERROR>>>>> BULK IMPORT EXECUTION IS FAILED");
 		
 		long duration = System.currentTimeMillis() - start;
 		Period p = new Period(duration);
 		log.debug("######## END BULK IMPORT ###############");
 		log.debug("DURATION: " + p.getHours() + " hours, " + p.getMinutes() + " minutes, " + p.getSeconds() + " secs, " + p.getMillis() + " msec.");
-		return false;
+		return ok;
 	}
 
-private void executeIsql(String[] args) throws ActionException {
+private boolean executeIsql(String[] args) throws ActionException {
+	boolean ok = false;
 	StringBuffer output = new StringBuffer();
 	Process process;
 	try {
@@ -99,11 +104,15 @@ private void executeIsql(String[] args) throws ActionException {
 		while ((line = reader.readLine())!= null) {
 			output.append(line + "\n");
 		}
-		log.debug(output.toString());
+		String outputstr = output.toString();
+		log.debug(outputstr);
+		ok = outputstr.contains("Done.") && outputstr.contains("msec.");
  
 	} catch (Exception e) {
+		errLog.error("ERROR: " + e.getMessage(), e);
 		throw new ActionException("ERROR: " + e.getMessage());
 	}
+	return ok;
 }
 	public void shutDown() throws ActionException {
 	}
