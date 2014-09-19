@@ -42,6 +42,9 @@ public class Record{
 	@XmlElementWrapper(name = "actions")
 	@XmlElement(name="action")
 	List<Action> actions;
+	
+	@XmlElement(name="cleanup")
+	Cleanup cleanup;
 
 }
 

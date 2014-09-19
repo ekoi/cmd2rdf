@@ -149,6 +149,8 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			for(IAction action : actions) {
 				action.shutDown();
 			}
+			
+			doCleanup(r.cleanup.actions);
 		}
 	}
 	
@@ -293,8 +295,10 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			else 
 				actions.add(clazzAction);
 		}
+		Object o = null;
 		for(IAction action : actions) {
-			action.execute(null,null);
+			
+			 o =action.execute(null, o);
 		}
 		for(IAction action : actions) {
 			action.shutDown();
@@ -306,6 +310,8 @@ public class JobProcessor  extends AbstractRecordProcessor<Jobs> {
 			throws ClassNotFoundException, InstantiationException,
 			IllegalAccessException, NoSuchFieldException,
 			NoSuchMethodException, InvocationTargetException, ActionException {
+		log.debug("Startup of " + act.clazz.name);
+		log.debug("Description: " + act.name);
 		Class<IAction> clazz = (Class<IAction>) Class.forName(act.clazz.name);
 		Constructor[] constructors = clazz.getConstructors(); 
 		for (Constructor c:constructors) {
