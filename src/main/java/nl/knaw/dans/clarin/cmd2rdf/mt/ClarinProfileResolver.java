@@ -124,17 +124,17 @@ public class ClarinProfileResolver implements URIResolver {
 			byte b[] = readHref(href);
 			if (b == null) {
 				errLog.debug("ERROR while reading " + href + ". It contains null value.");
-			}
-				
-			InputStream is = new ByteArrayInputStream(b);
-			cacheService.putByteArray(filename, b);
-			log.debug(cacheService.entries()
-					+ " put to cache service and save it as file: " + filename);
-			rwl.writeLock().lock();
-			FileUtils.writeByteArrayToFile(new File(basePath + "/" + filename),
-					b);
-
+			} else {
+				InputStream is = new ByteArrayInputStream(b);
+				cacheService.putByteArray(filename, b);
+				log.debug(cacheService.entries()
+						+ " put to cache service and save it as file: " + filename);
+				rwl.writeLock().lock();
+				FileUtils.writeByteArrayToFile(new File(basePath + "/" + filename),
+						b);
+			
 			return new StreamSource(is);
+			}
 		} catch (IOException e) {
 			log.error("ERROR: Caused by IOException, msg: " + e.getMessage());
 			e.printStackTrace();
