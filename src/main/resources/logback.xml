@@ -42,6 +42,7 @@
 	<logger name="org.easybatch.core.impl" level="INFO"/>
 	<logger name="nl.knaw.dans.clarin" level="DEBUG"/>
 	<logger name="org.apache.directmemory" level="ERROR"/>
+	<logger name="org.apache.http" level="ERROR"/>
 	
     <root level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
